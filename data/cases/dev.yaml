@@ -1,0 +1,276 @@
+# Synthetic evaluation cases (development split). All residents are fictional.
+# Sources imitate spoken dictation: informal, sometimes with German nursing terms
+# mixed in, self-corrections, and units left implicit.
+
+- id: c001
+  split: dev
+  phenomena: [blood_pressure, decimal, negation, laterality, as_needed, refusal, code_switch]
+  german_reference: >-
+    Fr. Brandt, Zi. 12: RR 145/90 mmHg, Puls 88/min, Temperatur 36,9 °C, kein Fieber.
+    Klagt über Schmerzen im rechten Knie (NRS 6/10), Bedarfsmedikation Metamizol 500 mg
+    verabreicht. Duschen heute abgelehnt.
+  facts:
+    - {kind: resident, name: Brandt, room: "12"}
+    - {kind: measurement, quantity: blood_pressure, values: [145, 90], unit: mmHg}
+    - {kind: measurement, quantity: pulse, values: [88], unit: /min}
+    - {kind: measurement, quantity: temperature, values: [36.9], unit: °C}
+    - {kind: finding, concept: Fieber, polarity: absent}
+    - {kind: finding, concept: Schmerzen, site: Knie, laterality: right}
+    - {kind: score, scale: NRS, value: 6, maximum: 10}
+    - {kind: medication, drug: Metamizol, dose: 500, unit: mg, as_needed: true}
+    - {kind: measure, action: Duschen, status: refused}
+  sources:
+    en: >-
+      Mrs Brandt, room 12. Blood pressure 145 over 90, pulse 88. Temperature 36.9, so no
+      fever. She's complaining about pain in her right knee, about 6 out of 10, so I gave the
+      Bedarfsmedikation, Metamizol 500 milligrams. She refused the shower today.
+    pl: >-
+      Pani Brandt, pokój 12. Ciśnienie 145 na 90, tętno 88. Temperatura 36,9, czyli bez
+      gorączki. Skarży się na ból prawego kolana, mniej więcej 6 na 10, więc podałam
+      Bedarfsmedikation, Metamizol 500 miligramów. Dzisiaj odmówiła prysznica.
+
+- id: c002
+  split: dev
+  phenomena: [fall, negation, laterality, blood_pressure, time]
+  german_reference: >-
+    Hr. Wagner, Zi. 7: Gegen 03:00 Uhr Sturz im Badezimmer, auf dem Boden liegend
+    aufgefunden. Keine Kopfverletzung. Hämatom an der linken Hüfte, Schmerzen NRS 4/10.
+    RR 160/95 mmHg, Puls 96/min. Hausarzt informiert.
+  facts:
+    - {kind: resident, name: Wagner, room: "7"}
+    - {kind: finding, concept: Sturz, context: "03:00"}
+    - {kind: finding, concept: Kopfverletzung, polarity: absent}
+    - {kind: finding, concept: Hämatom, site: Hüfte, laterality: left}
+    - {kind: finding, concept: Schmerzen}
+    - {kind: score, scale: NRS, value: 4, maximum: 10}
+    - {kind: measurement, quantity: blood_pressure, values: [160, 95], unit: mmHg}
+    - {kind: measurement, quantity: pulse, values: [96], unit: /min}
+    - {kind: measure, action: Hausarzt informiert}
+  sources:
+    en: >-
+      Mr Wagner, room 7. He had a fall tonight around 3 o'clock in the bathroom, I found him
+      lying on the floor. No head injury. He has a bruise on his left hip, pain about 4 out of
+      10. Blood pressure 160 over 95, pulse 96. I informed the GP.
+    pl: >-
+      Pan Wagner, pokój 7. W nocy około godziny 3 upadł w łazience, znalazłam go leżącego na
+      podłodze. Bez urazu głowy. Ma siniaka na lewym biodrze, ból około 4 na 10. Ciśnienie 160
+      na 95, tętno 96. Poinformowałam lekarza rodzinnego.
+
+- id: c003
+  split: dev
+  phenomena: [blood_glucose, insulin, negation, intake]
+  german_reference: >-
+    Fr. Schulz, Zi. 3: BZ vor dem Mittagessen 312 mg/dl, laut Schema 6 IE NovoRapid s.c.
+    verabreicht. Keine Übelkeit. Trinkmenge heute bisher 900 ml.
+  facts:
+    - {kind: resident, name: Schulz, room: "3"}
+    - {kind: measurement, quantity: blood_glucose, values: [312], unit: mg/dl, context: vor dem Mittagessen}
+    - {kind: medication, drug: NovoRapid, dose: 6, unit: IE, route: s.c.}
+    - {kind: finding, concept: Übelkeit, polarity: absent}
+    - {kind: intake, substance: Trinkmenge, amount: 900, unit: ml}
+  sources:
+    en: >-
+      Mrs Schulz, room 3. Blood sugar before lunch was 312. I gave 6 units of NovoRapid
+      subcutaneous according to the scheme. No nausea. She has only drunk 900 ml so far today.
+    pl: >-
+      Pani Schulz, pokój 3. Cukier przed obiadem 312. Zgodnie ze schematem podałam 6 jednostek
+      NovoRapid podskórnie. Bez nudności. Dzisiaj wypiła na razie tylko 900 ml.
+
+- id: c004
+  split: dev
+  phenomena: [self_correction, oxygen_saturation, decimal, as_needed, code_switch]
+  german_reference: >-
+    Hr. Becker, Zi. 21: Puls 82/min, SpO2 91 %. Atemnot und Husten, Temperatur 38,2 °C.
+    Bedarfsmedikation Salbutamol 2 Hübe verabreicht.
+  facts:
+    - {kind: resident, name: Becker, room: "21"}
+    - {kind: measurement, quantity: pulse, values: [82], unit: /min}
+    - {kind: measurement, quantity: oxygen_saturation, values: [91], unit: "%"}
+    - {kind: finding, concept: Atemnot}
+    - {kind: finding, concept: Husten}
+    - {kind: measurement, quantity: temperature, values: [38.2], unit: °C}
+    - {kind: medication, drug: Salbutamol, dose: 2, unit: Hub, route: inhalativ, as_needed: true}
+  sources:
+    en: >-
+      Mr Becker, room 21. Pulse 92, sorry, 82. Oxygen saturation 91 percent. He's short of
+      breath and coughing, temperature 38.2. I gave his as-needed Salbutamol, 2 puffs.
+    pl: >-
+      Pan Becker, pokój 21. Tętno 92, przepraszam, 82. Saturacja 91 procent. Ma duszność i
+      kaszel, temperatura 38,2. Podałam Salbutamol z Bedarfsmedikation, 2 wdechy.
+
+- id: c005
+  split: dev
+  phenomena: [wound, negation, measurement_pair, code_switch]
+  german_reference: >-
+    Fr. Hoffmann, Zi. 15: Dekubitus im Sakralbereich, Kategorie 2, Größe 2 x 3 cm. Keine
+    Infektionszeichen. Verbandswechsel durchgeführt, Lagerung durchgeführt.
+  facts:
+    - {kind: resident, name: Hoffmann, room: "15"}
+    - {kind: finding, concept: Dekubitus, site: Sakralbereich}
+    - {kind: score, scale: Dekubitus-Kategorie, value: 2}
+    - {kind: measurement, quantity: wound_size, values: [2, 3], unit: cm}
+    - {kind: finding, concept: Infektionszeichen, polarity: absent}
+    - {kind: measure, action: Verbandswechsel}
+    - {kind: measure, action: Lagerung}
+  sources:
+    en: >-
+      Mrs Hoffmann, room 15. The pressure ulcer on the sacrum, category 2, size 2 by 3
+      centimetres. No signs of infection. I changed the dressing and did the repositioning.
+    pl: >-
+      Pani Hoffmann, pokój 15. Odleżyna w okolicy krzyżowej, kategoria 2, wielkość 2 na 3
+      centymetry. Bez oznak infekcji. Zmieniłam opatrunek i zrobiłam zmianę pozycji, Lagerung.
+
+- id: c006
+  split: dev
+  phenomena: [hedging, refusal, intake, time]
+  german_reference: >-
+    Hr. Krüger, Zi. 9: Wirkt heute möglicherweise etwas verwirrter als sonst. Frühstück
+    abgelehnt. Trinkmenge 1200 ml. Um 20:00 Uhr Melperon 25 mg verabreicht.
+  facts:
+    - {kind: resident, name: Krüger, room: "9"}
+    - {kind: finding, concept: Verwirrtheit, polarity: possible}
+    - {kind: measure, action: Frühstück, status: refused}
+    - {kind: intake, substance: Trinkmenge, amount: 1200, unit: ml}
+    - {kind: medication, drug: Melperon, dose: 25, unit: mg, context: "20:00"}
+  sources:
+    en: >-
+      Mr Krüger, room 9. He seems maybe a bit more confused than usual today. He refused
+      breakfast. Fluid intake 1200 ml. At 20:00 I gave Melperon 25 milligrams.
+    pl: >-
+      Pan Krüger, pokój 9. Dzisiaj wydaje się może trochę bardziej zdezorientowany niż zwykle.
+      Odmówił śniadania. Wypił 1200 ml. O 20:00 podałam Melperon 25 miligramów.
+
+- id: c007
+  split: dev
+  phenomena: [refusal, withheld, decimal, blood_pressure]
+  german_reference: >-
+    Fr. Lehmann, Zi. 4: Morgenmedikation Ramipril 5 mg abgelehnt. Puls 52/min, RR 105/60 mmHg,
+    daher Metoprolol 47,5 mg nicht verabreicht. Hausarzt informiert.
+  facts:
+    - {kind: resident, name: Lehmann, room: "4"}
+    - {kind: medication, drug: Ramipril, dose: 5, unit: mg, status: refused}
+    - {kind: measurement, quantity: pulse, values: [52], unit: /min}
+    - {kind: measurement, quantity: blood_pressure, values: [105, 60], unit: mmHg}
+    - {kind: medication, drug: Metoprolol, dose: 47.5, unit: mg, status: withheld}
+    - {kind: measure, action: Hausarzt informiert}
+  sources:
+    en: >-
+      Mrs Lehmann, room 4. She refused her morning Ramipril 5 milligrams. Pulse was 52 and
+      blood pressure 105 over 60, so I didn't give the Metoprolol 47.5. I informed the GP.
+    pl: >-
+      Pani Lehmann, pokój 4. Odmówiła porannego Ramiprilu 5 miligramów. Tętno 52, ciśnienie
+      105 na 60, więc nie podałam Metoprololu 47,5. Poinformowałam lekarza rodzinnego.
+
+- id: c008
+  split: dev
+  phenomena: [weight_change_direction, decimal, laterality, negation]
+  german_reference: >-
+    Hr. Neumann, Zi. 18: Gewicht 82,4 kg, 2 kg mehr als letzte Woche. Ödeme an beiden
+    Unterschenkeln, keine Atemnot. Torasemid 10 mg verabreicht.
+  facts:
+    - {kind: resident, name: Neumann, room: "18"}
+    - {kind: measurement, quantity: weight, values: [82.4], unit: kg}
+    - {kind: measurement, quantity: weight_gain, values: [2], unit: kg, context: seit letzter Woche}
+    - {kind: finding, concept: Ödem, site: Unterschenkel, laterality: both}
+    - {kind: finding, concept: Atemnot, polarity: absent}
+    - {kind: medication, drug: Torasemid, dose: 10, unit: mg}
+  sources:
+    en: >-
+      Mr Neumann, room 18. Weight 82.4 kilos, that's 2 kilos more than last week. Swelling in
+      both lower legs, no shortness of breath. Gave Torasemid 10 milligrams.
+    pl: >-
+      Pan Neumann, pokój 18. Waga 82,4 kilo, to 2 kilo więcej niż w zeszłym tygodniu. Obrzęki
+      obu podudzi, bez duszności. Podałam Torasemid 10 miligramów.
+
+- id: c009
+  split: dev
+  phenomena: [patch, laterality, negation, temporal]
+  german_reference: >-
+    Fr. Schmitt, Zi. 11: Fentanylpflaster 25 µg/h gewechselt, neues Pflaster am linken
+    Oberarm. Schmerzen NRS 2/10, keine Übelkeit. Seit 3 Tagen kein Stuhlgang, Movicol 1 Beutel
+    verabreicht.
+  facts:
+    - {kind: resident, name: Schmitt, room: "11"}
+    - {kind: medication, drug: Fentanyl, dose: 25, unit: µg/h, route: transdermal, site: Oberarm, laterality: left}
+    - {kind: finding, concept: Schmerzen}
+    - {kind: score, scale: NRS, value: 2, maximum: 10}
+    - {kind: finding, concept: Übelkeit, polarity: absent}
+    - {kind: finding, concept: Stuhlgang, polarity: absent, context: seit 3 Tagen}
+    - {kind: medication, drug: Movicol, dose: 1, unit: Beutel}
+  sources:
+    en: >-
+      Mrs Schmitt, room 11. Changed the Fentanyl patch, 25 micrograms per hour, new patch on
+      the left upper arm. Pain 2 out of 10, no nausea. No bowel movement for 3 days, so I gave
+      Movicol, 1 sachet.
+    pl: >-
+      Pani Schmitt, pokój 11. Zmieniłam plaster z Fentanylem, 25 mikrogramów na godzinę, nowy
+      plaster na lewym ramieniu. Ból 2 na 10, bez nudności. Od 3 dni nie było stolca, podałam
+      Movicol, 1 saszetkę.
+
+- id: c010
+  split: dev
+  phenomena: [code_switch, laterality, negation, blood_pressure, decimal]
+  german_reference: >-
+    Hr. Fischer, Zi. 2: RR 128/76 mmHg, Puls 70/min, Temperatur 36,5 °C. Mobilisation mit
+    Rollator bis in den Speisesaal durchgeführt. Rötung an der rechten Ferse, kein Hautdefekt.
+    Fersenschutz angelegt.
+  facts:
+    - {kind: resident, name: Fischer, room: "2"}
+    - {kind: measurement, quantity: blood_pressure, values: [128, 76], unit: mmHg}
+    - {kind: measurement, quantity: pulse, values: [70], unit: /min}
+    - {kind: measurement, quantity: temperature, values: [36.5], unit: °C}
+    - {kind: measure, action: Mobilisation mit Rollator}
+    - {kind: finding, concept: Rötung, site: Ferse, laterality: right}
+    - {kind: finding, concept: Hautdefekt, polarity: absent, site: Ferse, laterality: right}
+    - {kind: measure, action: Fersenschutz angelegt}
+  sources:
+    en: >-
+      Mr Fischer, room 2. Vitalwerte: blood pressure 128 over 76, pulse 70, temp 36.5. Did the
+      Mobilisation with the Rollator to the dining room. There's redness on the right heel but
+      no open skin. I put on the Fersenschutz.
+    pl: >-
+      Pan Fischer, pokój 2. Vitalwerte: ciśnienie 128 na 76, tętno 70, temperatura 36,5.
+      Mobilizacja z Rollatorem do jadalni zrobiona. Zaczerwienienie na prawej pięcie, ale bez
+      rany. Założyłam Fersenschutz.
+
+- id: c011
+  split: dev
+  phenomena: [count, negation, decimal, planned_action]
+  german_reference: >-
+    Fr. Weber, Zi. 6: Seit heute Morgen 3-mal Durchfall, kein Erbrechen. Temperatur 37,4 °C.
+    Trinkmenge 1500 ml. Hausarzt soll informiert werden.
+  facts:
+    - {kind: resident, name: Weber, room: "6"}
+    - {kind: finding, concept: Durchfall, count: 3, context: seit heute Morgen}
+    - {kind: finding, concept: Erbrechen, polarity: absent}
+    - {kind: measurement, quantity: temperature, values: [37.4], unit: °C}
+    - {kind: intake, substance: Trinkmenge, amount: 1500, unit: ml}
+    - {kind: measure, action: Hausarzt informieren, status: planned}
+  sources:
+    en: >-
+      Mrs Weber, room 6. She's had diarrhoea 3 times since this morning, no vomiting.
+      Temperature 37.4. Drank 1500 ml. The GP still needs to be informed.
+    pl: >-
+      Pani Weber, pokój 6. Od rana 3 razy biegunka, bez wymiotów. Temperatura 37,4. Wypiła
+      1500 ml. Trzeba jeszcze poinformować lekarza rodzinnego.
+
+- id: c012
+  split: dev
+  phenomena: [count, as_needed, time, code_switch]
+  german_reference: >-
+    Hr. Richter, Zi. 14: Nachts unruhig, 4-mal aufgestanden. Um 23:30 Uhr Bedarfsmedikation
+    Pipamperon 40 mg verabreicht, danach geschlafen. Inkontinenzversorgung durchgeführt.
+  facts:
+    - {kind: resident, name: Richter, room: "14"}
+    - {kind: finding, concept: Unruhe, context: nachts}
+    - {kind: finding, concept: nächtliches Aufstehen, count: 4}
+    - {kind: medication, drug: Pipamperon, dose: 40, unit: mg, as_needed: true, context: "23:30"}
+    - {kind: finding, concept: Schlaf, context: nach Medikation}
+    - {kind: measure, action: Inkontinenzversorgung}
+  sources:
+    en: >-
+      Mr Richter, room 14. Restless at night, got up 4 times. At 23:30 I gave the as-needed
+      Pipamperon 40 milligrams, after that he slept. Changed his incontinence pad.
+    pl: >-
+      Pan Richter, pokój 14. W nocy niespokojny, wstawał 4 razy. O 23:30 podałam Pipamperon 40
+      miligramów z Bedarfsmedikation, potem spał. Zmieniłam pieluchomajtki.

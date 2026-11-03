@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+
+.env
+.env.*
+!.env.example
+
+# Raw experiment outputs and downloaded model weights
+runs/
+models/
+*.gguf

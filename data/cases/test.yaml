@@ -1,0 +1,484 @@
+# Synthetic evaluation cases (held-out test split). All residents are fictional.
+# Do not tune prompts, thresholds, or lexicons on these cases. The split is frozen by
+# hash in tests/test_dataset.py; changing it must be a deliberate, journalled decision.
+
+- id: c013
+  split: test
+  phenomena: [blood_pressure, as_needed, negation, repeat_measurement]
+  german_reference: >-
+    Fr. Keller, Zi. 5: RR 178/102 mmHg, klagt über Kopfschmerzen, kein Schwindel.
+    Bedarfsmedikation Nitrendipin 5 mg verabreicht. Kontrolle nach 30 Minuten: RR 150/88 mmHg.
+  facts:
+    - {kind: resident, name: Keller, room: "5"}
+    - {kind: measurement, quantity: blood_pressure, values: [178, 102], unit: mmHg}
+    - {kind: finding, concept: Kopfschmerzen}
+    - {kind: finding, concept: Schwindel, polarity: absent}
+    - {kind: medication, drug: Nitrendipin, dose: 5, unit: mg, as_needed: true}
+    - {kind: measurement, quantity: blood_pressure, values: [150, 88], unit: mmHg, context: nach 30 Minuten}
+  sources:
+    en: >-
+      Mrs Keller, room 5. Blood pressure 178 over 102, she complains of a headache, no
+      dizziness. Gave the as-needed Nitrendipin 5 milligrams. Rechecked after 30 minutes, 150
+      over 88.
+    pl: >-
+      Pani Keller, pokój 5. Ciśnienie 178 na 102, skarży się na ból głowy, bez zawrotów.
+      Podałam Nitrendipin 5 miligramów z Bedarfsmedikation. Kontrola po 30 minutach: 150 na 88.
+
+- id: c014
+  split: test
+  phenomena: [blood_glucose, hypoglycaemia, intake, repeat_measurement]
+  german_reference: >-
+    Hr. Zimmermann, Zi. 23: BZ 54 mg/dl, schwitzig, aber ansprechbar. 200 ml Orangensaft
+    gegeben. BZ-Kontrolle nach 15 Minuten: 98 mg/dl.
+  facts:
+    - {kind: resident, name: Zimmermann, room: "23"}
+    - {kind: measurement, quantity: blood_glucose, values: [54], unit: mg/dl}
+    - {kind: finding, concept: Schwitzen}
+    - {kind: finding, concept: Bewusstseinsstörung, polarity: absent}
+    - {kind: intake, substance: Orangensaft, amount: 200, unit: ml}
+    - {kind: measurement, quantity: blood_glucose, values: [98], unit: mg/dl, context: nach 15 Minuten}
+  sources:
+    en: >-
+      Mr Zimmermann, room 23. Blood sugar 54, he's sweaty but responsive. Gave him 200 ml
+      orange juice. Checked again after 15 minutes, 98.
+    pl: >-
+      Pan Zimmermann, pokój 23. Cukier 54, spocony, ale kontaktowy. Dałam mu 200 ml soku
+      pomarańczowego. Kontrola po 15 minutach: 98.
+
+- id: c015
+  split: test
+  phenomena: [negation, blood_pressure, context_dependent_values]
+  german_reference: >-
+    Fr. Hartmann, Zi. 8: Beim Aufstehen Schwindel, kein Sturz. RR im Liegen 132/80 mmHg, im
+    Stehen 108/70 mmHg. Hüftprotektor angelegt.
+  facts:
+    - {kind: resident, name: Hartmann, room: "8"}
+    - {kind: finding, concept: Schwindel, context: beim Aufstehen}
+    - {kind: finding, concept: Sturz, polarity: absent}
+    - {kind: measurement, quantity: blood_pressure, values: [132, 80], unit: mmHg, context: im Liegen}
+    - {kind: measurement, quantity: blood_pressure, values: [108, 70], unit: mmHg, context: im Stehen}
+    - {kind: measure, action: Hüftprotektor angelegt}
+  sources:
+    en: >-
+      Mrs Hartmann, room 8. She got dizzy when standing up, but she didn't fall. Blood pressure
+      lying down 132 over 80, standing 108 over 70. Put on the hip protector.
+    pl: >-
+      Pani Hartmann, pokój 8. Przy wstawaniu zawroty głowy, ale nie upadła. Ciśnienie na
+      leżąco 132 na 80, na stojąco 108 na 70. Założyłam ochraniacz bioder.
+
+- id: c016
+  split: test
+  phenomena: [catheter, decimal_zero, physician_contact]
+  german_reference: >-
+    Hr. Schröder, Zi. 16: Urinausscheidung über DK 600 ml, Urin trüb und übelriechend.
+    Temperatur 38 °C. Hausarzt informiert, Urinprobe ins Labor geschickt.
+  facts:
+    - {kind: resident, name: Schröder, room: "16"}
+    - {kind: measurement, quantity: urine_output, values: [600], unit: ml}
+    - {kind: finding, concept: trüber Urin}
+    - {kind: finding, concept: übelriechender Urin}
+    - {kind: measurement, quantity: temperature, values: [38], unit: °C}
+    - {kind: measure, action: Hausarzt informiert}
+    - {kind: measure, action: Urinprobe ins Labor}
+  sources:
+    en: >-
+      Mr Schröder, room 16. Urine output via the catheter 600 ml, the urine is cloudy and
+      smells bad. Temperature 38. I informed the GP and sent a urine sample to the lab.
+    pl: >-
+      Pan Schröder, pokój 16. Przez cewnik 600 ml moczu, mocz mętny i brzydko pachnie.
+      Temperatura 38. Poinformowałam lekarza rodzinnego, próbkę moczu wysłałam do laboratorium.
+
+- id: c017
+  split: test
+  phenomena: [refusal, partial_acceptance, negation, intake]
+  german_reference: >-
+    Fr. Braun, Zi. 10: Körperpflege abgelehnt, nur Gesichtswäsche akzeptiert. Trinkmenge
+    1100 ml. Gewicht 61 kg. Keine Schmerzen.
+  facts:
+    - {kind: resident, name: Braun, room: "10"}
+    - {kind: measure, action: Körperpflege, status: refused}
+    - {kind: measure, action: Gesichtswäsche}
+    - {kind: intake, substance: Trinkmenge, amount: 1100, unit: ml}
+    - {kind: measurement, quantity: weight, values: [61], unit: kg}
+    - {kind: finding, concept: Schmerzen, polarity: absent}
+  sources:
+    en: >-
+      Mrs Braun, room 10. She refused the body care, only accepted washing her face. Fluid
+      intake 1100 ml. Weight 61 kilos. No pain.
+    pl: >-
+      Pani Braun, pokój 10. Odmówiła toalety ciała, zgodziła się tylko na umycie twarzy. Wypiła
+      1100 ml. Waga 61 kilo. Bez bólu.
+
+- id: c018
+  split: test
+  phenomena: [dysphagia, oxygen_saturation, negation]
+  german_reference: >-
+    Hr. Koch, Zi. 19: Schluckbeschwerden, beim Trinken Husten. Getränke angedickt. SpO2 94 %,
+    kein Fieber.
+  facts:
+    - {kind: resident, name: Koch, room: "19"}
+    - {kind: finding, concept: Schluckbeschwerden}
+    - {kind: finding, concept: Husten, context: beim Trinken}
+    - {kind: measure, action: Getränke angedickt}
+    - {kind: measurement, quantity: oxygen_saturation, values: [94], unit: "%"}
+    - {kind: finding, concept: Fieber, polarity: absent}
+  sources:
+    en: >-
+      Mr Koch, room 19. He has trouble swallowing, coughed while drinking. I thickened his
+      drinks. Saturation 94 percent, no fever.
+    pl: >-
+      Pan Koch, pokój 19. Ma problemy z przełykaniem, kaszlał przy piciu. Zagęściłam mu napoje.
+      Saturacja 94 procent, bez gorączki.
+
+- id: c019
+  split: test
+  phenomena: [anticoagulant, decimal, bleeding, physician_contact]
+  german_reference: >-
+    Fr. Bauer, Zi. 1: Apixaban 2,5 mg verabreicht. Nasenbluten für ca. 10 Minuten,
+    selbstständig sistiert. RR 140/85 mmHg. Hausarzt informiert.
+  facts:
+    - {kind: resident, name: Bauer, room: "1"}
+    - {kind: medication, drug: Apixaban, dose: 2.5, unit: mg}
+    - {kind: finding, concept: Nasenbluten, context: "ca. 10 Minuten, selbstständig sistiert"}
+    - {kind: measurement, quantity: blood_pressure, values: [140, 85], unit: mmHg}
+    - {kind: measure, action: Hausarzt informiert}
+  sources:
+    en: >-
+      Mrs Bauer, room 1. Gave Apixaban 2.5 milligrams. She had a nosebleed for about 10
+      minutes, it stopped on its own. Blood pressure 140 over 85. Informed the GP.
+    pl: >-
+      Pani Bauer, pokój 1. Podałam Apixaban 2,5 miligrama. Krwawienie z nosa przez około 10
+      minut, samo ustało. Ciśnienie 140 na 85. Poinformowałam lekarza rodzinnego.
+
+- id: c020
+  split: test
+  phenomena: [emergency, laterality, time, blood_pressure]
+  german_reference: >-
+    Hr. Wolf, Zi. 22: Um 10:15 Uhr plötzliche Schwäche im linken Arm und verwaschene Sprache.
+    RR 190/100 mmHg. Notruf 112 verständigt.
+  facts:
+    - {kind: resident, name: Wolf, room: "22"}
+    - {kind: finding, concept: Schwäche, site: Arm, laterality: left, context: "10:15, plötzlich"}
+    - {kind: finding, concept: verwaschene Sprache}
+    - {kind: measurement, quantity: blood_pressure, values: [190, 100], unit: mmHg}
+    - {kind: measure, action: Notruf verständigt}
+  sources:
+    en: >-
+      Mr Wolf, room 22. At 10:15 sudden weakness in his left arm and slurred speech. Blood
+      pressure 190 over 100. I called 112.
+    pl: >-
+      Pan Wolf, pokój 22. O 10:15 nagłe osłabienie lewej ręki i niewyraźna mowa. Ciśnienie 190
+      na 100. Zadzwoniłam pod 112.
+
+- id: c021
+  split: test
+  phenomena: [eye_drops, laterality, negation]
+  german_reference: >-
+    Fr. Schäfer, Zi. 13: Latanoprost 1 Tropfen in beide Augen verabreicht. Rechtes Auge
+    gerötet, kein Sekret.
+  facts:
+    - {kind: resident, name: Schäfer, room: "13"}
+    - {kind: medication, drug: Latanoprost, dose: 1, unit: Tropfen, site: Auge, laterality: both}
+    - {kind: finding, concept: Rötung, site: Auge, laterality: right}
+    - {kind: finding, concept: Augensekret, polarity: absent}
+  sources:
+    en: >-
+      Mrs Schäfer, room 13. Gave Latanoprost, 1 drop in both eyes. The right eye is red, no
+      discharge.
+    pl: >-
+      Pani Schäfer, pokój 13. Podałam Latanoprost, 1 kroplę do obu oczu. Prawe oko
+      zaczerwienione, bez wydzieliny.
+
+- id: c022
+  split: test
+  phenomena: [implicit_unit, refusal, blood_glucose]
+  german_reference: >-
+    Hr. Meyer, Zi. 17: BZ nüchtern 145 mg/dl. Metformin 500 mg eingenommen, Pantoprazol 40 mg
+    abgelehnt.
+  facts:
+    - {kind: resident, name: Meyer, room: "17"}
+    - {kind: measurement, quantity: blood_glucose, values: [145], unit: mg/dl, context: nüchtern}
+    - {kind: medication, drug: Metformin, dose: 500, unit: mg}
+    - {kind: medication, drug: Pantoprazol, dose: 40, unit: mg, status: refused}
+  sources:
+    en: >-
+      Mr Meyer, room 17. Fasting blood sugar 145. He took the Metformin 500, but refused the
+      Pantoprazol 40.
+    pl: >-
+      Pan Meyer, pokój 17. Cukier na czczo 145. Wziął Metformin 500, ale odmówił Pantoprazolu
+      40.
+
+- id: c023
+  split: test
+  phenomena: [laterality, time, pain]
+  german_reference: >-
+    Fr. Hahn, Zi. 20: Schmerzen in beiden Knien, NRS 5/10. Um 14:00 Uhr Paracetamol 1000 mg
+    verabreicht. Kühlung durchgeführt.
+  facts:
+    - {kind: resident, name: Hahn, room: "20"}
+    - {kind: finding, concept: Schmerzen, site: Knie, laterality: both}
+    - {kind: score, scale: NRS, value: 5, maximum: 10}
+    - {kind: medication, drug: Paracetamol, dose: 1000, unit: mg, context: "14:00"}
+    - {kind: measure, action: Kühlung}
+  sources:
+    en: >-
+      Mrs Hahn, room 20. Pain in both knees, 5 out of 10. At 14:00 I gave Paracetamol 1000
+      milligrams. Did cooling.
+    pl: >-
+      Pani Hahn, pokój 20. Ból w obu kolanach, 5 na 10. O 14:00 podałam Paracetamol 1000
+      miligramów. Zrobiłam chłodzenie.
+
+- id: c024
+  split: test
+  phenomena: [respiratory, oxygen, negation]
+  german_reference: >-
+    Hr. Schwarz, Zi. 24: Atemfrequenz 24/min, SpO2 89 %. Sauerstoff 2 l/min nach ärztlicher
+    Anordnung begonnen. Keine Zyanose.
+  facts:
+    - {kind: resident, name: Schwarz, room: "24"}
+    - {kind: measurement, quantity: respiratory_rate, values: [24], unit: /min}
+    - {kind: measurement, quantity: oxygen_saturation, values: [89], unit: "%"}
+    - {kind: medication, drug: Sauerstoff, dose: 2, unit: l/min, context: nach ärztlicher Anordnung}
+    - {kind: finding, concept: Zyanose, polarity: absent}
+  sources:
+    en: >-
+      Mr Schwarz, room 24. Breathing rate 24, saturation 89 percent. Started oxygen at 2 litres
+      per minute as ordered. No cyanosis.
+    pl: >-
+      Pan Schwarz, pokój 24. Oddechy 24 na minutę, saturacja 89 procent. Zgodnie ze zleceniem
+      lekarza włączyłam tlen 2 litry na minutę. Bez sinicy.
+
+- id: c025
+  split: test
+  phenomena: [wound, laterality, negation]
+  german_reference: >-
+    Fr. Krause, Zi. 25: Hautriss am rechten Unterarm, ca. 3 cm. Gereinigt und verbunden, keine
+    Blutung mehr.
+  facts:
+    - {kind: resident, name: Krause, room: "25"}
+    - {kind: finding, concept: Hautriss, site: Unterarm, laterality: right}
+    - {kind: measurement, quantity: wound_size, values: [3], unit: cm}
+    - {kind: measure, action: Wundversorgung}
+    - {kind: finding, concept: Blutung, polarity: absent}
+  sources:
+    en: >-
+      Mrs Krause, room 25. Skin tear on the right forearm, about 3 centimetres. I cleaned it
+      and put a dressing on, no more bleeding.
+    pl: >-
+      Pani Krause, pokój 25. Rozdarcie skóry na prawym przedramieniu, około 3 centymetry.
+      Oczyściłam i założyłam opatrunek, już nie krwawi.
+
+- id: c026
+  split: test
+  phenomena: [as_needed, pain, repeat_measurement]
+  german_reference: >-
+    Hr. Walter, Zi. 26: Rückenschmerzen NRS 7/10, Bedarfsmedikation Tramadol 50 mg
+    verabreicht. Nach 1 Stunde NRS 3/10.
+  facts:
+    - {kind: resident, name: Walter, room: "26"}
+    - {kind: finding, concept: Schmerzen, site: Rücken}
+    - {kind: score, scale: NRS, value: 7, maximum: 10}
+    - {kind: medication, drug: Tramadol, dose: 50, unit: mg, as_needed: true}
+    - {kind: score, scale: NRS, value: 3, maximum: 10, context: nach 1 Stunde}
+  sources:
+    en: >-
+      Mr Walter, room 26. Back pain 7 out of 10, gave the as-needed Tramadol 50 milligrams.
+      After 1 hour, 3 out of 10.
+    pl: >-
+      Pan Walter, pokój 26. Ból pleców 7 na 10, podałam Tramadol 50 miligramów z
+      Bedarfsmedikation. Po godzinie 3 na 10.
+
+- id: c027
+  split: test
+  phenomena: [weight_change_direction, decimal, code_switch]
+  german_reference: >-
+    Fr. Lange, Zi. 27: Gewicht 48,6 kg, Abnahme von 3 kg in einem Monat. Isst wenig.
+    Trinknahrung 200 ml gegeben.
+  facts:
+    - {kind: resident, name: Lange, room: "27"}
+    - {kind: measurement, quantity: weight, values: [48.6], unit: kg}
+    - {kind: measurement, quantity: weight_loss, values: [3], unit: kg, context: in einem Monat}
+    - {kind: finding, concept: geringe Nahrungsaufnahme}
+    - {kind: intake, substance: Trinknahrung, amount: 200, unit: ml}
+  sources:
+    en: >-
+      Mrs Lange, room 27. Weight 48.6 kilos, she lost 3 kilos in a month. She eats very little.
+      Gave her 200 ml of Trinknahrung.
+    pl: >-
+      Pani Lange, pokój 27. Waga 48,6 kilo, schudła 3 kilo w ciągu miesiąca. Je bardzo mało.
+      Dałam jej 200 ml Trinknahrung.
+
+- id: c028
+  split: test
+  phenomena: [self_correction, decimal, as_needed]
+  german_reference: >-
+    Hr. Werner, Zi. 28: Ängstlich und unruhig. Bedarfsmedikation Lorazepam 0,5 mg verabreicht,
+    danach ruhiger.
+  facts:
+    - {kind: resident, name: Werner, room: "28"}
+    - {kind: finding, concept: Angst}
+    - {kind: finding, concept: Unruhe}
+    - {kind: medication, drug: Lorazepam, dose: 0.5, unit: mg, as_needed: true}
+    - {kind: finding, concept: Beruhigung, context: nach Medikation}
+  sources:
+    en: >-
+      Mr Werner, room 28. He was anxious and restless. Gave as-needed Lorazepam 1 milligram, no
+      wait, 0.5 milligrams. Afterwards he was calmer.
+    pl: >-
+      Pan Werner, pokój 28. Był lękliwy i niespokojny. Podałam Lorazepam z Bedarfsmedikation 1
+      miligram, nie, przepraszam, 0,5 miligrama. Potem był spokojniejszy.
+
+- id: c029
+  split: test
+  phenomena: [double_negation, negation]
+  german_reference: >-
+    Fr. Schmid, Zi. 29: Morgenmedikation inklusive Donepezil 10 mg vollständig eingenommen.
+    Keine Unruhe, nicht verwirrter als sonst.
+  facts:
+    - {kind: resident, name: Schmid, room: "29"}
+    - {kind: medication, drug: Donepezil, dose: 10, unit: mg}
+    - {kind: finding, concept: Unruhe, polarity: absent}
+    - {kind: finding, concept: Verwirrtheit, polarity: absent, context: über das Übliche hinaus}
+  sources:
+    en: >-
+      Mrs Schmid, room 29. Today she didn't refuse her morning meds, she took everything
+      including the Donepezil 10 milligrams. She wasn't restless, and not more confused than
+      usual.
+    pl: >-
+      Pani Schmid, pokój 29. Dzisiaj nie odmówiła porannych leków, wzięła wszystko razem z
+      Donepezilem 10 miligramów. Nie była niespokojna i nie bardziej zdezorientowana niż
+      zwykle.
+
+- id: c030
+  split: test
+  phenomena: [temporal, negation, laterality]
+  german_reference: >-
+    Hr. Klein, Zi. 30: Zustand nach Sturz gestern. Heute keine Schmerzen, Hüfte frei
+    beweglich. Hämatom am linken Knie rückläufig.
+  facts:
+    - {kind: resident, name: Klein, room: "30"}
+    - {kind: finding, concept: Sturz, context: gestern}
+    - {kind: finding, concept: Schmerzen, polarity: absent, context: heute}
+    - {kind: finding, concept: Bewegungseinschränkung, polarity: absent, site: Hüfte}
+    - {kind: finding, concept: Hämatom, site: Knie, laterality: left, context: rückläufig}
+  sources:
+    en: >-
+      Mr Klein, room 30. He fell yesterday. Today no pain, the hip moves normally. The bruise on
+      the left knee is getting smaller.
+    pl: >-
+      Pan Klein, pokój 30. Wczoraj upadł. Dzisiaj bez bólu, biodro rusza się normalnie. Siniak
+      na lewym kolanie się zmniejsza.
+
+- id: c031
+  split: test
+  phenomena: [count, negation, decimal_zero, as_needed, intake]
+  german_reference: >-
+    Fr. Graf, Zi. 31: Nach dem Mittagessen 2-mal erbrochen, kein Durchfall. Temperatur 37 °C.
+    Bedarfsmedikation Metoclopramid 10 mg verabreicht. 300 ml Tee getrunken.
+  facts:
+    - {kind: resident, name: Graf, room: "31"}
+    - {kind: finding, concept: Erbrechen, count: 2, context: nach dem Mittagessen}
+    - {kind: finding, concept: Durchfall, polarity: absent}
+    - {kind: measurement, quantity: temperature, values: [37], unit: °C}
+    - {kind: medication, drug: Metoclopramid, dose: 10, unit: mg, as_needed: true}
+    - {kind: intake, substance: Tee, amount: 300, unit: ml}
+  sources:
+    en: >-
+      Mrs Graf, room 31. She vomited 2 times after lunch, no diarrhoea. Temperature 37. Gave
+      the as-needed Metoclopramid 10 milligrams. She drank 300 ml of tea.
+    pl: >-
+      Pani Graf, pokój 31. Po obiedzie 2 razy wymiotowała, bez biegunki. Temperatura 37.
+      Podałam Metoclopramid 10 miligramów z Bedarfsmedikation. Wypiła 300 ml herbaty.
+
+- id: c032
+  split: test
+  phenomena: [insulin, time, blood_glucose]
+  german_reference: >-
+    Hr. Vogel, Zi. 32: BZ um 21:00 Uhr 210 mg/dl. Lantus 18 IE s.c. verabreicht.
+  facts:
+    - {kind: resident, name: Vogel, room: "32"}
+    - {kind: measurement, quantity: blood_glucose, values: [210], unit: mg/dl, context: "21:00"}
+    - {kind: medication, drug: Lantus, dose: 18, unit: IE, route: s.c.}
+  sources:
+    en: >-
+      Mr Vogel, room 32. Blood sugar at 21:00 was 210. Gave Lantus 18 units subcutaneous.
+    pl: >-
+      Pan Vogel, pokój 32. Cukier o 21:00: 210. Podałam Lantus 18 jednostek podskórnie.
+
+- id: c033
+  split: test
+  phenomena: [score, planned_action, negation]
+  german_reference: >-
+    Fr. Friedrich, Zi. 33: Braden-Skala 12 Punkte. Lagerung alle 2 Stunden geplant. Keine
+    Hautrötung.
+  facts:
+    - {kind: resident, name: Friedrich, room: "33"}
+    - {kind: score, scale: Braden, value: 12}
+    - {kind: measure, action: Lagerung alle 2 Stunden, status: planned}
+    - {kind: finding, concept: Rötung, polarity: absent, site: Haut}
+  sources:
+    en: >-
+      Mrs Friedrich, room 33. Braden score 12. Repositioning every 2 hours is planned. No
+      redness on the skin.
+    pl: >-
+      Pani Friedrich, pokój 33. Skala Braden 12 punktów. Zaplanowana zmiana pozycji co 2
+      godziny. Bez zaczerwienienia skóry.
+
+- id: c034
+  split: test
+  phenomena: [temporal, negation, time]
+  german_reference: >-
+    Hr. Günther, Zi. 34: Seit 4 Tagen kein Stuhlgang. Bauch weich, keine Bauchschmerzen.
+    Abends Laxoberal 10 Tropfen verabreicht.
+  facts:
+    - {kind: resident, name: Günther, room: "34"}
+    - {kind: finding, concept: Stuhlgang, polarity: absent, context: seit 4 Tagen}
+    - {kind: finding, concept: weicher Bauch}
+    - {kind: finding, concept: Bauchschmerzen, polarity: absent}
+    - {kind: medication, drug: Laxoberal, dose: 10, unit: Tropfen, context: abends}
+  sources:
+    en: >-
+      Mr Günther, room 34. No bowel movement for 4 days. Abdomen is soft, no abdominal pain. In
+      the evening I gave Laxoberal 10 drops.
+    pl: >-
+      Pan Günther, pokój 34. Od 4 dni bez stolca. Brzuch miękki, bez bólu brzucha. Wieczorem
+      podałam Laxoberal 10 kropli.
+
+- id: c035
+  split: test
+  phenomena: [fever, decimal, blood_pressure, planned_action]
+  german_reference: >-
+    Fr. Roth, Zi. 35: Temperatur 39,1 °C mit Schüttelfrost. RR 100/60 mmHg, Puls 112/min.
+    Paracetamol 500 mg verabreicht. Hausarzt informiert, kommt zur Visite.
+  facts:
+    - {kind: resident, name: Roth, room: "35"}
+    - {kind: measurement, quantity: temperature, values: [39.1], unit: °C}
+    - {kind: finding, concept: Schüttelfrost}
+    - {kind: measurement, quantity: blood_pressure, values: [100, 60], unit: mmHg}
+    - {kind: measurement, quantity: pulse, values: [112], unit: /min}
+    - {kind: medication, drug: Paracetamol, dose: 500, unit: mg}
+    - {kind: measure, action: Hausarzt informiert}
+    - {kind: measure, action: Hausarztvisite, status: planned}
+  sources:
+    en: >-
+      Mrs Roth, room 35. Temperature 39.1 with chills. Blood pressure 100 over 60, pulse 112.
+      Gave Paracetamol 500 milligrams. Informed the GP, he's coming to see her.
+    pl: >-
+      Pani Roth, pokój 35. Temperatura 39,1, dreszcze. Ciśnienie 100 na 60, tętno 112. Podałam
+      Paracetamol 500 miligramów. Poinformowałam lekarza rodzinnego, przyjdzie ją zobaczyć.
+
+- id: c036
+  split: test
+  phenomena: [uneventful, negation, blood_pressure]
+  german_reference: >-
+    Hr. Frank, Zi. 36: Nacht ruhig, gut geschlafen. Keine Beschwerden. RR 122/78 mmHg.
+  facts:
+    - {kind: resident, name: Frank, room: "36"}
+    - {kind: finding, concept: Schlaf}
+    - {kind: finding, concept: Beschwerden, polarity: absent}
+    - {kind: measurement, quantity: blood_pressure, values: [122, 78], unit: mmHg}
+  sources:
+    en: >-
+      Mr Frank, room 36. Quiet night, slept well. No complaints. Blood pressure 122 over 78.
+    pl: >-
+      Pan Frank, pokój 36. Spokojna noc, dobrze spał. Bez dolegliwości. Ciśnienie 122 na 78.
