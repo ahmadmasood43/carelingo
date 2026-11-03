@@ -122,12 +122,26 @@ class Extraction:
     # Items the model returned that do not validate, e.g. blood pressure with one value.
     rejected: tuple[dict, ...]
     completion: Completion
+    # The response was not valid JSON (e.g. a repetition loop cut off at max_tokens).
+    # Nothing can be verified, so the note must go to human review.
+    failed: bool = False
+
+
+# A short note has at most a few dozen facts, so this bound only stops runaway
+# repetition, which otherwise costs time and money before failing anyway.
+MAX_EXTRACTION_TOKENS = 2000
 
 
 def extract_facts(client: ChatModel, model: str, text: str) -> Extraction:
-    completion = client.complete(model, EXTRACTION_SYSTEM_PROMPT, text, json_schema=FACTS_SCHEMA)
+    completion = client.complete(
+        model, EXTRACTION_SYSTEM_PROMPT, text, FACTS_SCHEMA, MAX_EXTRACTION_TOKENS
+    )
+    try:
+        items = json.loads(completion.text)["facts"]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return Extraction((), (), completion, failed=True)
     facts, rejected = [], []
-    for item in json.loads(completion.text)["facts"]:
+    for item in items:
         try:
             facts.append(_FACT_ADAPTER.validate_python(item))
         except ValidationError:
