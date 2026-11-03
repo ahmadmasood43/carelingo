@@ -1,0 +1,41 @@
+# Manual error labels for the unchecked baseline outputs of experiment E-001
+# (dev split, runs/baseline-dev-*.jsonl). Single annotator, not a clinician.
+# Notes not listed here were judged free of these errors.
+#
+# Classes:
+#   unsupported_claim  clinical content the dictation does not state (finding, reason, route)
+#   status_changed     given/refused/planned/done changed
+#   hedge_lost         "maybe" rendered as certain, or vice versa
+#   site_changed       different body site
+#   prn_lost           as-needed medication (Bedarfsmedikation) written as a regular dose
+#   invented_metadata  date or time not in the dictation
+#   language_leak      source-language words left in the German note
+# The first five count as clinically meaningful errors.
+#
+# Revision 2026-11-03: prn_lost was added for 14b/c004/en and 8b/c004/en after the
+# verifier flagged them and the outputs were re-read. Labels revised after seeing a
+# system's output favour that system; these two are marked so they can be excluded.
+
+- {model: mistral-large-4, case: c006, language: pl, errors: [hedge_lost]}
+
+- {model: ministral-14b-2512, case: c001, language: pl, errors: [invented_metadata]}
+- {model: ministral-14b-2512, case: c002, language: pl, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c003, language: pl, errors: [invented_metadata]}
+- {model: ministral-14b-2512, case: c004, language: en, errors: [invented_metadata, prn_lost], revised: true}
+- {model: ministral-14b-2512, case: c004, language: pl, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c005, language: pl, errors: [language_leak]}
+- {model: ministral-14b-2512, case: c006, language: en, errors: [hedge_lost]}
+- {model: ministral-14b-2512, case: c006, language: pl, errors: [hedge_lost, unsupported_claim]}
+- {model: ministral-14b-2512, case: c007, language: pl, errors: [invented_metadata]}
+- {model: ministral-14b-2512, case: c009, language: pl, errors: [invented_metadata]}
+- {model: ministral-14b-2512, case: c011, language: en, errors: [unsupported_claim]}
+
+- {model: ministral-8b-2512, case: c001, language: en, errors: [unsupported_claim]}
+- {model: ministral-8b-2512, case: c004, language: en, errors: [invented_metadata, prn_lost], revised: true}
+- {model: ministral-8b-2512, case: c005, language: en, errors: [site_changed]}
+- {model: ministral-8b-2512, case: c005, language: pl, errors: [site_changed]}
+- {model: ministral-8b-2512, case: c006, language: en, errors: [hedge_lost]}
+- {model: ministral-8b-2512, case: c006, language: pl, errors: [hedge_lost]}
+- {model: ministral-8b-2512, case: c007, language: en, errors: [unsupported_claim]}
+- {model: ministral-8b-2512, case: c011, language: pl, errors: [status_changed, invented_metadata]}
+- {model: ministral-8b-2512, case: c012, language: en, errors: [unsupported_claim, invented_metadata]}
