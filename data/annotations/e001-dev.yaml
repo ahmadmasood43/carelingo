@@ -1,4 +1,4 @@
-# Manual error labels for the unchecked baseline outputs of experiment E-001
+# Manual error labels for the unchecked single-pass baseline outputs
 # (dev split, runs/baseline-dev-*.jsonl). Single annotator, not a clinician.
 # Notes not listed here were judged free of these errors.
 #

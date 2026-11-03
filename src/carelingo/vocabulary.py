@@ -266,7 +266,8 @@ def canonical_site(site: str) -> str | None:
 def sites_compatible(first: str | None, second: str | None) -> bool:
     a = canonical_site(first) if first else None
     b = canonical_site(second) if second else None
-    if a is None or b is None:
+    if a is None or b is None or "Haut" in (a, b):
+        # "Haut" names no location, so it is compatible with any body site.
         return True
     return a == b or SITE_PARENTS.get(a) == b or SITE_PARENTS.get(b) == a
 

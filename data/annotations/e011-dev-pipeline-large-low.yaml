@@ -1,0 +1,7 @@
+# Manual error labels for the live pipeline run with mistral-large-4 at
+# reasoning_effort=low as the draft model (runs/pipeline-dev-large-low.jsonl).
+# Single annotator, not a clinician. The 17 outputs that differ from the recorded run
+# in e008-dev-large-low.yaml were labelled without looking at their tiers. The other 7
+# are word-for-word identical to that run and carry its labels.
+
+- {model: pipeline:mistral-large-4@low, case: c006, language: pl, errors: [hedge_lost]}

@@ -221,3 +221,30 @@ def test_value_change_absent_from_note_text_stays_critical():
         output_text="Puls 92/min",
     )
     assert d.severity == "critical"
+
+
+def test_look_alike_drug_swap_with_same_dose_stays_critical():
+    discrepancies = compare_facts(
+        [RESIDENT, Medication(drug="Metamizol", dose=500, unit="mg")],
+        [RESIDENT, Medication(drug="Metoprolol", dose=500, unit="mg")],
+        source_text="Gave Metamizol 500 milligrams.",
+        source_language="en",
+        output_text="Metoprolol 500 mg verabreicht.",
+    )
+    assert {d.severity for d in discrepancies} == {"critical"}
+
+
+def test_generic_skin_site_and_negated_action_names_do_not_differ():
+    assert (
+        _changed(
+            [
+                Finding(concept="Hautdefekt", polarity=Polarity.ABSENT, site="Ferse"),
+                Finding(concept="Stuhlgang", polarity=Polarity.ABSENT),
+            ],
+            [
+                Finding(concept="Hautdefekt", polarity=Polarity.ABSENT, site="Haut"),
+                CareMeasure(action="kein Stuhlgang seit 3 Tagen", status="not_done"),
+            ],
+        )
+        == []
+    )

@@ -1,0 +1,6 @@
+# Manual error labels for mistral-large-4 at reasoning_effort=low on the dev split
+# (runs/baseline-dev-mistral-large-4@low.jsonl). Single annotator, not a clinician.
+# Labelled before these outputs were run through the verifier. Classes as in
+# e001-dev.yaml. Notes not listed were judged free of these errors.
+
+- {model: mistral-large-4@low, case: c006, language: pl, errors: [hedge_lost]}

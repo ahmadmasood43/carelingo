@@ -38,6 +38,7 @@ from carelingo.vocabulary import (
     canonical_site,
     drugs_match,
     finding_mentioned,
+    normalize_drug,
     site_laterality,
     sites_compatible,
 )
@@ -51,6 +52,19 @@ class Discrepancy:
     severity: Severity
     kind: str
     detail: str
+    # The facts involved, so a checklist can describe the problem in the nurse's language.
+    source: Fact | None = None
+    output: Fact | None = None
+
+    def as_record(self) -> dict:
+        return {
+            "type": self.type,
+            "severity": self.severity,
+            "kind": self.kind,
+            "detail": self.detail,
+            "source": self.source.model_dump(mode="json") if self.source else None,
+            "output": self.output.model_dump(mode="json") if self.output else None,
+        }
 
 
 def _close(first: float, second: float) -> bool:
@@ -310,7 +324,8 @@ def _normalized(facts: list[Fact]) -> list[Fact]:
     - A side written into the site ("rechtes Knie") becomes the laterality.
     - A count of 0 or 1 carries no information and is dropped.
     - Facts asserting the same thing twice, which extractors sometimes emit, count once,
-      as are care actions that only restate a medication ("Movicol geben").
+      as are care actions that only restate a medication ("Movicol geben") or a
+      finding on the same side ("kein Stuhlgang" as both).
     """
     facts = [
         f.model_copy(update={"laterality": site_laterality(f.site)})
@@ -334,10 +349,16 @@ def _normalized(facts: list[Fact]) -> list[Fact]:
     if pain_scored and not has_pain_finding:
         facts.append(Finding(concept="Schmerzen"))
     drugs = [f.drug for f in facts if isinstance(f, Medication)]
+    findings = {_cross_kind_term(f) for f in facts if isinstance(f, Finding)}
     facts = [
         f
         for f in facts
-        if not (isinstance(f, CareMeasure) and any(d.lower() in f.action.lower() for d in drugs))
+        if not (
+            isinstance(f, CareMeasure)
+            and (
+                any(d.lower() in f.action.lower() for d in drugs) or _cross_kind_term(f) in findings
+            )
+        )
     ]
     unique, seen = [], set()
     for fact in facts:
@@ -361,8 +382,14 @@ def _meaning(fact: Fact):
             return fact.model_copy(update={"context": None})
 
 
+_LEADING_NEGATION = re.compile(r"^(kein|keine|keinen|nicht)\s+", re.IGNORECASE)
+
+
 def _cross_kind_term(fact: Finding | CareMeasure) -> str:
-    return canonical("finding", fact.concept if isinstance(fact, Finding) else fact.action)
+    # A care action "kein Stuhlgang seit 3 Tagen" names the same thing as the finding
+    # "Stuhlgang" (absent); the negation is carried by status or polarity instead.
+    term = fact.concept if isinstance(fact, Finding) else fact.action
+    return canonical("finding", _LEADING_NEGATION.sub("", term))
 
 
 def _reconcile_findings_and_measures(unmatched: dict[str, tuple[list, list]]) -> None:
@@ -381,12 +408,17 @@ def _reconcile_findings_and_measures(unmatched: dict[str, tuple[list, list]]) ->
 
 
 def _evidence_in_text(fact: Fact, text: str | None, language: str) -> bool:
+    """Whether the text itself contains the fact, so a discrepancy is an extraction slip.
+
+    Numbers alone are not enough for medications: a look-alike drug swap keeps the
+    dose ("Metoprolol 500 mg" for "Metamizol 500 mg"), so the drug name must match too.
+    """
     values = numeric_values(fact)
-    return (
-        bool(values)
-        and text is not None
-        and all(contains_number(text, language, value) for value in values)
-    )
+    if not values or text is None:
+        return False
+    if isinstance(fact, Medication) and normalize_drug(fact.drug) not in normalize_drug(text):
+        return False
+    return all(contains_number(text, language, value) for value in values)
 
 
 def compare_facts(
@@ -422,7 +454,14 @@ def compare_facts(
                 if check.numeric and _evidence_in_text(s, output_text, "de"):
                     severity, problem = "minor", f"{problem} (values present in note)"
                 discrepancies.append(
-                    Discrepancy("changed", severity, kind, f"{rules.label(s)}: {problem}")
+                    Discrepancy(
+                        "changed",
+                        severity,
+                        kind,
+                        f"{rules.label(s)}: {problem}",
+                        source=s,
+                        output=o,
+                    )
                 )
     _reconcile_findings_and_measures(unmatched)
     for fact_type, rules in _RULES.items():
@@ -436,18 +475,22 @@ def compare_facts(
             )
             if mentioned:
                 label = f"{rules.label(fact)} (term present in note)"
-                discrepancies.append(Discrepancy("omitted", "minor", kind, label))
+                discrepancies.append(Discrepancy("omitted", "minor", kind, label, source=fact))
             elif _evidence_in_text(fact, output_text, "de"):
                 label = f"{rules.label(fact)} (values present in note)"
-                discrepancies.append(Discrepancy("omitted", "minor", kind, label))
+                discrepancies.append(Discrepancy("omitted", "minor", kind, label, source=fact))
             else:
-                discrepancies.append(Discrepancy("omitted", rules.omitted, kind, rules.label(fact)))
+                discrepancies.append(
+                    Discrepancy("omitted", rules.omitted, kind, rules.label(fact), source=fact)
+                )
         for fact in added:
             if _evidence_in_text(fact, source_text, source_language):
                 label = f"{rules.label(fact)} (values present in dictation)"
-                discrepancies.append(Discrepancy("added", "minor", kind, label))
+                discrepancies.append(Discrepancy("added", "minor", kind, label, output=fact))
             else:
-                discrepancies.append(Discrepancy("added", rules.added, kind, rules.label(fact)))
+                discrepancies.append(
+                    Discrepancy("added", rules.added, kind, rules.label(fact), output=fact)
+                )
     return sorted(discrepancies, key=lambda d: _SEVERITY_RANK[d.severity])
 
 
@@ -470,6 +513,9 @@ def verify(
         for date in unsupported_dates(source_text, output_text)
     ]
     return sorted(discrepancies, key=lambda d: _SEVERITY_RANK[d.severity])
+
+
+UNVERIFIABLE = Discrepancy("changed", "critical", "extraction", "note could not be checked")
 
 
 def needs_review(discrepancies: list[Discrepancy]) -> bool:
