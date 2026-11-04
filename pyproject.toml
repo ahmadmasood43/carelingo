@@ -14,9 +14,20 @@ dependencies = [
 carelingo = "carelingo.cli:main"
 
 [dependency-groups]
+# Speech recognition on an NVIDIA GPU. The CUDA libraries come from pip, so no system
+# CUDA toolkit is needed.
+asr = [
+    "faster-whisper>=1.2",
+    "jiwer>=3.0",
+    "nvidia-cublas-cu12>=12.4",
+    "nvidia-cudnn-cu12>=9,<10",
+]
 dev = [
     "pytest>=8.3",
     "ruff>=0.8",
+]
+tts = [
+    "piper-tts>=1.8.0",
 ]
 
 [build-system]
