@@ -132,10 +132,12 @@ class Extraction:
 MAX_EXTRACTION_TOKENS = 2000
 
 
-def extract_facts(client: ChatModel, model: str, text: str) -> Extraction:
-    completion = client.complete(
-        model, EXTRACTION_SYSTEM_PROMPT, text, FACTS_SCHEMA, MAX_EXTRACTION_TOKENS
-    )
+def extract_facts(
+    client: ChatModel, model: str, text: str, max_tokens: int = MAX_EXTRACTION_TOKENS
+) -> Extraction:
+    """Facts in `text`. Reasoning models count their reasoning in `max_tokens`, so they
+    need a much larger cap than the default."""
+    completion = client.complete(model, EXTRACTION_SYSTEM_PROMPT, text, FACTS_SCHEMA, max_tokens)
     try:
         items = json.loads(completion.text)["facts"]
     except (json.JSONDecodeError, KeyError, TypeError):

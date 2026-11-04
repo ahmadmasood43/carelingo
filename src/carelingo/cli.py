@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import statistics
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -10,13 +11,15 @@ from pydantic import TypeAdapter
 
 from carelingo.dataset import load_cases
 from carelingo.evaluation import percentile, score_output
-from carelingo.extraction import extract_facts
+from carelingo.extraction import MAX_EXTRACTION_TOKENS, extract_facts
 from carelingo.facts import Fact
 from carelingo.injection import variants
 from carelingo.llm import Completion, MistralClient, OllamaClient
 from carelingo.narrative import check_narrative
 from carelingo.pipeline import ModelChoice, PipelineConfig, process
-from carelingo.simulation import Step, run_policy, summarize
+from carelingo.routing import decide
+from carelingo.simulation import CLINICAL_ERRORS, Step, run_policy, summarize
+from carelingo.stats import proportion
 from carelingo.translate import translate_dictation
 from carelingo.verification import (
     UNVERIFIABLE,
@@ -26,7 +29,6 @@ from carelingo.verification import (
 )
 
 DEFAULT_CASES_DIR = Path(__file__).parents[2] / "data" / "cases"
-CLINICAL_ERRORS = {"unsupported_claim", "status_changed", "hedge_lost", "site_changed", "prn_lost"}
 
 _FACTS = TypeAdapter(list[Fact])
 
@@ -39,6 +41,11 @@ def _usage(completion: Completion) -> dict:
         "latency_s": round(completion.latency_s, 3),
         "cost_usd": completion.cost_usd,
     }
+
+
+def _note_key(record: dict) -> tuple[str, str, str]:
+    # Verification records name the generator; pipeline records name the draft model.
+    return (record.get("generator") or record["draft_model"], record["case_id"], record["language"])
 
 
 def _read_jsonl(paths: list[Path]) -> list[dict]:
@@ -277,19 +284,19 @@ def run_narrative(args: argparse.Namespace) -> None:
     done = []
     if args.resume and args.out.exists():
         done = _read_jsonl([args.out])
-    finished = {(r["generator"], r["case_id"], r["language"]) for r in done}
+    finished = {_note_key(r) for r in done}
 
     def records():
         yield from done
         for r in _read_jsonl(args.inputs):
-            if (r["generator"], r["case_id"], r["language"]) in finished:
+            if _note_key(r) in finished:
                 continue
             dictation = cases[r["case_id"]].sources[r["language"]]
             key = (dictation, r["output"])
             if key not in checks:
                 checks[key] = check_narrative(client, args.model, dictation, r["output"])
             check = checks[key]
-            print(f"{r['generator']} {r['case_id']} {r['language']} {len(check.unsupported)}")
+            print(f"{' '.join(_note_key(r))} {len(check.unsupported)}")
             yield {
                 **r,
                 "narrative_model": args.model,
@@ -347,21 +354,215 @@ def score_verification(args: argparse.Namespace) -> None:
                 )
 
 
-def run_pipeline(args: argparse.Namespace) -> None:
-    """Run the full pipeline live on a split and record what happened to each note."""
+def _labels(paths: list[Path], model: str) -> dict[tuple[str, str], set[str]]:
+    labels = {}
+    for path in paths:
+        for a in yaml.safe_load(path.read_text()) or []:
+            if a["model"] == model:
+                labels[a["case"], a["language"]] = set(a["errors"])
+    return labels
+
+
+def _held_out_metrics(rows: list[tuple], narrative: dict) -> dict[str, tuple[int, int]]:
+    """Counts (k, n) per metric for rows of (case, language, tier, label set)."""
+
+    def erroneous(row) -> bool:
+        return bool((row[3] or set()) & CLINICAL_ERRORS)
+
+    def flagged(row, with_narrative: bool) -> bool:
+        return row[2] != "ready" or (with_narrative and bool(narrative.get((row[0], row[1]))))
+
+    wrong = [row for row in rows if erroneous(row)]
+    clean = [row for row in rows if not erroneous(row)]
+    return {
+        "notes with a clinical error": (len(wrong), len(rows)),
+        "unflagged clinical errors (no narrative)": (
+            sum(not flagged(r, False) for r in wrong),
+            len(rows),
+        ),
+        "unflagged clinical errors (+ narrative)": (
+            sum(not flagged(r, True) for r in wrong),
+            len(rows),
+        ),
+        "errors caught (no narrative)": (sum(flagged(r, False) for r in wrong), len(wrong)),
+        "errors caught (+ narrative)": (sum(flagged(r, True) for r in wrong), len(wrong)),
+        "clean notes flagged (no narrative)": (sum(flagged(r, False) for r in clean), len(clean)),
+        "clean notes flagged (+ narrative)": (sum(flagged(r, True) for r in clean), len(clean)),
+        "blocked": (sum(r[2] == "blocked" for r in rows), len(rows)),
+    }
+
+
+def report(args: argparse.Namespace) -> None:
+    """Held-out metrics with 95% Wilson intervals, overall and per language."""
+    cases = {case.id: case for case in load_cases(args.cases)}
+    pipeline_narrative = {}
+    if args.narrative:
+        pipeline_narrative = {
+            (r["case_id"], r["language"]): r["narrative_findings"]
+            for r in _read_jsonl(args.narrative)
+        }
+    reference_narrative = {}
+    if args.reference_narrative:
+        reference_narrative = {
+            (r["case_id"], r["language"]): r["narrative_findings"]
+            for r in _read_jsonl(args.reference_narrative)
+        }
+    systems = {}
+    pipeline_labels = _labels(args.labels, args.pipeline_label)
+    systems["final system (pipeline)"] = [
+        (r["case_id"], r["language"], r["tier"], pipeline_labels.get((r["case_id"], r["language"])))
+        for r in _read_jsonl([args.pipeline])
+    ]
+    if args.reference:
+        reference_labels = _labels(args.labels, args.reference_label)
+        rows = []
+        for r in _read_jsonl([args.reference]):
+            case = cases[r["case_id"]]
+            discrepancies = verify(
+                _FACTS.validate_python(r["source_facts"]),
+                _FACTS.validate_python(r["output_facts"]),
+                case.sources[r["language"]],
+                r["language"],
+                r["output"],
+            )
+            if r.get("extraction_failed"):
+                discrepancies.insert(0, UNVERIFIABLE)
+            tier = decide(discrepancies, escalated=True).tier
+            rows.append(
+                (
+                    r["case_id"],
+                    r["language"],
+                    tier,
+                    reference_labels.get((r["case_id"], r["language"])),
+                )
+            )
+        systems[f"{args.reference_label} + verify"] = rows
+
+    for name, rows in systems.items():
+        narrative = pipeline_narrative if name == "final system (pipeline)" else reference_narrative
+        unlabelled = sum(errors is None for *_, errors in rows)
+        print(f"\n### {name}" + (f" (UNLABELLED: {unlabelled})" if unlabelled else ""))
+        print("| | all | en | pl |")
+        print("|---|---|---|---|")
+        by_language = [rows] + [[r for r in rows if r[1] == lang] for lang in ("en", "pl")]
+        tables = [_held_out_metrics(subset, narrative) for subset in by_language]
+        for label in tables[0]:
+            cells = " | ".join(proportion(*table[label]) for table in tables)
+            print(f"| {label} | {cells} |")
+
+    pipeline_rows = _read_jsonl([args.pipeline])
+    latencies = sorted(r["latency_s"] for r in pipeline_rows)
+    print(
+        f"\nfinal system: cost/note ${statistics.mean(r['cost_usd'] for r in pipeline_rows):.5f}, "
+        f"latency p50 {statistics.median(latencies):.1f} s, "
+        f"p95 {latencies[int(0.95 * (len(latencies) - 1))]:.1f} s, max {latencies[-1]:.1f} s"
+    )
+
+
+def run_asr(args: argparse.Namespace) -> None:
+    """Transcribe audio files listed in a TSV (id, file, reference) and report WER."""
+    from carelingo.asr import Transcriber, load_audio, word_error_rate
+
+    rows = [line.split("\t") for line in args.manifest.read_text().splitlines()][: args.limit]
+    transcriber = Transcriber(args.model)
+
+    def records():
+        for row in rows:
+            utterance_id, filename, reference = row[0], row[1], row[2]
+            transcript = transcriber.transcribe(
+                load_audio(args.audio_dir / filename), None if args.detect else args.language
+            )
+            yield {
+                "id": utterance_id,
+                "file": filename,
+                "reference": reference,
+                "hypothesis": transcript.text,
+                "expected_language": args.language,
+                "detected_language": transcript.language,
+                "language_probability": round(transcript.language_probability, 3),
+                "audio_s": round(transcript.audio_s, 2),
+                "latency_s": round(transcript.latency_s, 3),
+                "model": transcriber.model_name,
+            }
+
+    results = list(records())
+    _write_jsonl(args.out, results)
+    wer = word_error_rate([r["reference"] for r in results], [r["hypothesis"] for r in results])
+    detected = sum(r["detected_language"] == args.language for r in results)
+    audio = sum(r["audio_s"] for r in results)
+    compute = sum(r["latency_s"] for r in results)
+    print(
+        f"{args.language}: n={len(results)} WER {wer:.1%} | language detected "
+        f"{detected}/{len(results)} | real-time factor {compute / audio:.2f}"
+    )
+
+
+def synthesize(args: argparse.Namespace) -> None:
+    """Write synthetic audio for a split's dictations, plus a manifest per language."""
+    import numpy as np
+
+    from carelingo.tts import VOICES, Synthesizer, add_noise, write_wav
+
     cases = [case for case in load_cases(args.cases) if case.split == args.split]
+    synthesizer = Synthesizer(args.voices)
+    rng = np.random.default_rng(args.seed)
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    for language in args.languages:
+        voices = VOICES[language]
+        rows, meta = [], []
+        for index, case in enumerate(cases):
+            voice = voices[index % len(voices)]
+            text = case.sources[language]
+            audio, rate = synthesizer.synthesize(text, voice)
+            utterance_id = f"{case.id}-{language}"
+            write_wav(args.out_dir / f"{utterance_id}.wav", add_noise(audio, args.snr, rng), rate)
+            rows.append(f"{utterance_id}\t{utterance_id}.wav\t{text}")
+            meta.append(
+                {
+                    "id": utterance_id,
+                    "voice": voice.name,
+                    "speaker": voice.speaker,
+                    "accent": voice.label,
+                    "snr_db": args.snr,
+                }
+            )
+            print(f"{utterance_id} {voice.name} {voice.label} {len(audio) / rate:.1f}s")
+        (args.out_dir / f"manifest-{language}.tsv").write_text("\n".join(rows) + "\n")
+        _write_jsonl(args.out_dir / f"voices-{language}.jsonl", meta)
+
+
+def run_pipeline(args: argparse.Namespace) -> None:
+    """Run the full pipeline live on a split and record what happened to each note.
+
+    With --transcripts, each dictation is replaced by its speech-recognition transcript,
+    so recognition errors reach the draft and the source extraction alike.
+    """
+    cases = [case for case in load_cases(args.cases) if case.split == args.split]
+    transcripts = {r["id"]: r["hypothesis"] for r in _read_jsonl(args.transcripts or [])}
+    done = _read_jsonl([args.out]) if args.resume and args.out.exists() else []
+    finished = {(r["case_id"], r["language"]) for r in done}
     config = PipelineConfig(
         draft=ModelChoice(MistralClient(reasoning_effort=args.draft_effort), args.draft_model),
-        extractor=ModelChoice(MistralClient(), args.extractor),
+        extractor=ModelChoice(
+            MistralClient(reasoning_effort=args.extractor_effort), args.extractor
+        ),
         strong=ModelChoice(MistralClient(reasoning_effort=args.strong_effort), args.strong_model)
         if args.strong_model
         else None,
+        extraction_max_tokens=args.extraction_max_tokens,
     )
 
     def records():
+        yield from done
         for case in cases:
             for language in args.languages:
-                result = process(case.sources[language], language, config)
+                utterance_id = f"{case.id}-{language}"
+                if (case.id, language) in finished or (
+                    transcripts and utterance_id not in transcripts
+                ):
+                    continue
+                dictation = transcripts.get(utterance_id, case.sources[language])
+                result = process(dictation, language, config)
                 print(f"{case.id} {language} {result.decision.tier} {result.latency_s:.1f}s")
                 yield {
                     "case_id": case.id,
@@ -370,6 +571,10 @@ def run_pipeline(args: argparse.Namespace) -> None:
                     "draft_effort": args.draft_effort,
                     "strong_model": args.strong_model,
                     "strong_effort": args.strong_effort,
+                    "extractor": args.extractor,
+                    "extractor_effort": args.extractor_effort,
+                    "dictation": dictation,
+                    "from_transcript": bool(transcripts),
                     "output": result.text,
                     "tier": result.decision.tier,
                     "escalated": result.escalated,
@@ -524,6 +729,26 @@ def main() -> None:
     score_inject.add_argument("--details", action="store_true", help="print misses and alarms")
     score_inject.set_defaults(handler=score_injection)
 
+    final = commands.add_parser("report", help="held-out metrics with confidence intervals")
+    final.add_argument("--pipeline", type=Path, required=True)
+    final.add_argument("--pipeline-label", default="pipeline:mistral-large-4@low")
+    final.add_argument("--reference", type=Path, help="verification records of a reference model")
+    final.add_argument("--reference-label", default="ministral-14b-2512")
+    final.add_argument("--labels", type=Path, nargs="+", required=True)
+    final.add_argument("--narrative", type=Path, nargs="+", help="narrative records, final system")
+    final.add_argument("--reference-narrative", type=Path, nargs="+", help="same, reference")
+    final.set_defaults(handler=report)
+
+    asr = commands.add_parser("asr", help="transcribe audio and report word error rate")
+    asr.add_argument("--manifest", type=Path, required=True, help="TSV: id, file, reference")
+    asr.add_argument("--audio-dir", type=Path, required=True)
+    asr.add_argument("--language", required=True, help="expected language code, e.g. en")
+    asr.add_argument("--detect", action="store_true", help="let Whisper detect the language")
+    asr.add_argument("--model", default="large-v3-turbo")
+    asr.add_argument("--limit", type=int)
+    asr.add_argument("--out", type=Path, required=True)
+    asr.set_defaults(handler=run_asr)
+
     live = commands.add_parser("pipeline", help="run the full pipeline live")
     # Default: a strong first draft, verified, with no second model.
     live.add_argument("--draft-model", default="mistral-large-4")
@@ -531,10 +756,28 @@ def main() -> None:
     live.add_argument("--strong-model")
     live.add_argument("--strong-effort", choices=["low", "medium", "high"])
     live.add_argument("--extractor", default="ministral-14b-2512")
+    live.add_argument("--extractor-effort", choices=["low", "medium", "high"])
+    live.add_argument(
+        "--extraction-max-tokens",
+        type=int,
+        default=MAX_EXTRACTION_TOKENS,
+        help="raise for reasoning models",
+    )
     live.add_argument("--split", choices=["dev", "test"], default="dev")
     live.add_argument("--languages", nargs="+", default=["en", "pl"])
+    live.add_argument("--transcripts", type=Path, nargs="+", help="asr records to use as input")
+    live.add_argument("--resume", action="store_true", help="keep records already in --out")
     live.add_argument("--out", type=Path, required=True)
     live.set_defaults(handler=run_pipeline)
+
+    tts = commands.add_parser("synthesize", help="write synthetic dictation audio")
+    tts.add_argument("--split", choices=["dev", "test"], default="test")
+    tts.add_argument("--languages", nargs="+", default=["en", "pl"])
+    tts.add_argument("--voices", type=Path, default=Path("models/piper"))
+    tts.add_argument("--snr", type=float, default=20.0, help="signal-to-noise ratio in dB")
+    tts.add_argument("--seed", type=int, default=20261104)
+    tts.add_argument("--out-dir", type=Path, required=True)
+    tts.set_defaults(handler=synthesize)
 
     simulate = commands.add_parser("simulate-routing", help="replay runs under routing policies")
     simulate.add_argument("--baselines", type=Path, nargs="+", required=True)

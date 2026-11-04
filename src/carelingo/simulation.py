@@ -11,7 +11,16 @@ from dataclasses import dataclass
 
 from carelingo.routing import decide
 
-CLINICAL_ERRORS = {"unsupported_claim", "status_changed", "hedge_lost", "site_changed", "prn_lost"}
+# Label classes (data/annotations) that count as clinically meaningful errors;
+# invented_metadata and language_leak are recorded but not counted.
+CLINICAL_ERRORS = {
+    "unsupported_claim",
+    "status_changed",
+    "hedge_lost",
+    "site_changed",
+    "prn_lost",
+    "fact_omitted",
+}
 
 
 @dataclass(frozen=True)

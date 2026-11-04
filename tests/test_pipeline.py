@@ -52,3 +52,21 @@ def test_critical_draft_without_strong_model_is_blocked_with_checklist():
     result = process(DICTATION, "en", _config(["Fr. Brandt, Zi. 12: Puls 98/min."]))
     assert result.decision.tier == "blocked"
     assert "Pulse: 88 /min → Pulse: 98 /min" in result.checklist
+
+
+def test_extraction_token_cap_reaches_every_extraction():
+    caps = []
+
+    class Recording(_Scripted):
+        def complete(self, model, system, user, json_schema=None, max_tokens=None):
+            if json_schema is not None:
+                caps.append(max_tokens)
+            return super().complete(model, system, user, json_schema, max_tokens)
+
+    config = PipelineConfig(
+        draft=ModelChoice(_Scripted(["Fr. Brandt, Zi. 12: Puls 88/min."]), "ministral-8b-2512"),
+        extractor=ModelChoice(Recording([]), "x"),
+        extraction_max_tokens=12_000,
+    )
+    process(DICTATION, "en", config)
+    assert caps == [12_000, 12_000]
