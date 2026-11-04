@@ -3,6 +3,8 @@ name = "carelingo"
 version = "0.1.0"
 description = "Fact-preservation checks for translated nursing documentation"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28.1",

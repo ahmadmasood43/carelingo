@@ -140,6 +140,8 @@ The [report](docs/report.md#7-limitations) has the full list.
 
 ## Data and licences
 
+The code is under the [MIT licence](LICENSE). Third-party data keeps its own licence:
+
 - PriMock57 (Babylon Health) and FLEURS (Google) are used under CC BY 4.0 for speech recognition
   tests. `results/` includes transcripts from both.
 - The optional `tts` group installs Piper, which is GPL-3.0. One of the evaluated voices is
