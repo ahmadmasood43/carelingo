@@ -22,6 +22,10 @@ CLINICAL_ERRORS = {
     "fact_omitted",
 }
 
+# Speech adds errors a translation cannot introduce on its own. A misspelt but still
+# recognisable drug is counted separately.
+SPEECH_CLINICAL_ERRORS = CLINICAL_ERRORS | {"drug_changed", "value_changed", "room_changed"}
+
 
 @dataclass(frozen=True)
 class Step:

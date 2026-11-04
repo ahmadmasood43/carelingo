@@ -68,6 +68,8 @@ asr = [
     { name = "nvidia-cudnn-cu12" },
 ]
 dev = [
+    { name = "jiwer" },
+    { name = "numpy" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -90,6 +92,8 @@ asr = [
     { name = "nvidia-cudnn-cu12", specifier = ">=9,<10" },
 ]
 dev = [
+    { name = "jiwer", specifier = ">=4.0.0" },
+    { name = "numpy", specifier = ">=2.5.4" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "ruff", specifier = ">=0.8" },
 ]

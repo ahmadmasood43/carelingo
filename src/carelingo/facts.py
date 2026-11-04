@@ -8,7 +8,7 @@ dictation can be compared directly with facts found in the German output.
 from enum import StrEnum
 from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 
 class Polarity(StrEnum):
@@ -129,3 +129,6 @@ def numeric_values(fact: Fact) -> tuple[float, ...]:
             return (float(room),) if room is not None and room.isdigit() else ()
         case _:
             return ()
+
+
+FACT_LIST = TypeAdapter(list[Fact])

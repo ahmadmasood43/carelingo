@@ -4,33 +4,40 @@ import argparse
 import json
 import statistics
 from collections import Counter, defaultdict
+from functools import partial
 from pathlib import Path
 
 import yaml
-from pydantic import TypeAdapter
 
 from carelingo.dataset import load_cases
+from carelingo.demo import SCENARIOS, live_view, render, replay
 from carelingo.evaluation import percentile, score_output
 from carelingo.extraction import MAX_EXTRACTION_TOKENS, extract_facts
-from carelingo.facts import Fact
+from carelingo.facts import FACT_LIST, ResidentRef
 from carelingo.injection import variants
 from carelingo.llm import Completion, MistralClient, OllamaClient
 from carelingo.narrative import check_narrative
 from carelingo.pipeline import ModelChoice, PipelineConfig, process
 from carelingo.routing import decide
-from carelingo.simulation import CLINICAL_ERRORS, Step, run_policy, summarize
+from carelingo.simulation import (
+    CLINICAL_ERRORS,
+    SPEECH_CLINICAL_ERRORS,
+    Step,
+    run_policy,
+    summarize,
+)
 from carelingo.stats import proportion
 from carelingo.translate import translate_dictation
 from carelingo.verification import (
     UNVERIFIABLE,
     compare_facts,
     needs_review,
+    reverify,
     verify,
 )
 
 DEFAULT_CASES_DIR = Path(__file__).parents[2] / "data" / "cases"
-
-_FACTS = TypeAdapter(list[Fact])
+DEFAULT_RESULTS_DIR = Path(__file__).parents[2] / "results"
 
 
 def _usage(completion: Completion) -> dict:
@@ -151,8 +158,8 @@ def score_injection(args: argparse.Namespace) -> None:
     for r in rows:
         case = cases[r["case_id"]]
         discrepancies = verify(
-            _FACTS.validate_python(r["source_facts"]),
-            _FACTS.validate_python(r["output_facts"]),
+            FACT_LIST.validate_python(r["source_facts"]),
+            FACT_LIST.validate_python(r["output_facts"]),
             case.sources[r["language"]],
             r["language"],
             r["output"],
@@ -210,7 +217,7 @@ def score_extraction(args: argparse.Namespace) -> None:
     groups = defaultdict(list)
     for record in _read_jsonl(args.runs):
         gold = list(cases[record["case_id"]].facts)
-        extracted = _FACTS.validate_python(record["facts"])
+        extracted = FACT_LIST.validate_python(record["facts"])
         groups[(record["model"], record["language"])].append(
             (record, gold, extracted, compare_facts(gold, extracted))
         )
@@ -235,7 +242,7 @@ def run_verification(args: argparse.Namespace) -> None:
     """Extract facts from each baseline output and compare them with the source facts."""
     cases = {case.id: case for case in load_cases(args.cases)}
     source_facts = {
-        (r["case_id"], r["language"]): _FACTS.validate_python(r["facts"])
+        (r["case_id"], r["language"]): FACT_LIST.validate_python(r["facts"])
         for r in _read_jsonl([args.extractions])
     }
     client = MistralClient()
@@ -319,8 +326,8 @@ def score_verification(args: argparse.Namespace) -> None:
     for r in rows:
         case = cases[r["case_id"]]
         discrepancies = verify(
-            _FACTS.validate_python(r["source_facts"]),
-            _FACTS.validate_python(r["output_facts"]),
+            FACT_LIST.validate_python(r["source_facts"]),
+            FACT_LIST.validate_python(r["output_facts"]),
             case.sources[r["language"]],
             r["language"],
             r["output"],
@@ -392,6 +399,25 @@ def _held_out_metrics(rows: list[tuple], narrative: dict) -> dict[str, tuple[int
     }
 
 
+def _print_by_language(rows: list[tuple], metrics) -> None:
+    print("| | all | en | pl |")
+    print("|---|---|---|---|")
+    by_language = [rows] + [[r for r in rows if r[1] == lang] for lang in ("en", "pl")]
+    tables = [metrics(subset) for subset in by_language]
+    for label in tables[0]:
+        cells = " | ".join(proportion(*table[label]) for table in tables)
+        print(f"| {label} | {cells} |")
+
+
+def _cost_and_latency(records: list[dict]) -> str:
+    latencies = sorted(r["latency_s"] for r in records)
+    return (
+        f"cost/note ${statistics.mean(r['cost_usd'] for r in records):.5f}, "
+        f"latency p50 {statistics.median(latencies):.1f} s, "
+        f"p95 {latencies[int(0.95 * (len(latencies) - 1))]:.1f} s, max {latencies[-1]:.1f} s"
+    )
+
+
 def report(args: argparse.Namespace) -> None:
     """Held-out metrics with 95% Wilson intervals, overall and per language."""
     cases = {case.id: case for case in load_cases(args.cases)}
@@ -417,16 +443,7 @@ def report(args: argparse.Namespace) -> None:
         reference_labels = _labels(args.labels, args.reference_label)
         rows = []
         for r in _read_jsonl([args.reference]):
-            case = cases[r["case_id"]]
-            discrepancies = verify(
-                _FACTS.validate_python(r["source_facts"]),
-                _FACTS.validate_python(r["output_facts"]),
-                case.sources[r["language"]],
-                r["language"],
-                r["output"],
-            )
-            if r.get("extraction_failed"):
-                discrepancies.insert(0, UNVERIFIABLE)
+            discrepancies = reverify(r, cases[r["case_id"]].sources[r["language"]])
             tier = decide(discrepancies, escalated=True).tier
             rows.append(
                 (
@@ -442,21 +459,94 @@ def report(args: argparse.Namespace) -> None:
         narrative = pipeline_narrative if name == "final system (pipeline)" else reference_narrative
         unlabelled = sum(errors is None for *_, errors in rows)
         print(f"\n### {name}" + (f" (UNLABELLED: {unlabelled})" if unlabelled else ""))
-        print("| | all | en | pl |")
-        print("|---|---|---|---|")
-        by_language = [rows] + [[r for r in rows if r[1] == lang] for lang in ("en", "pl")]
-        tables = [_held_out_metrics(subset, narrative) for subset in by_language]
-        for label in tables[0]:
-            cells = " | ".join(proportion(*table[label]) for table in tables)
-            print(f"| {label} | {cells} |")
+        _print_by_language(rows, partial(_held_out_metrics, narrative=narrative))
 
-    pipeline_rows = _read_jsonl([args.pipeline])
-    latencies = sorted(r["latency_s"] for r in pipeline_rows)
-    print(
-        f"\nfinal system: cost/note ${statistics.mean(r['cost_usd'] for r in pipeline_rows):.5f}, "
-        f"latency p50 {statistics.median(latencies):.1f} s, "
-        f"p95 {latencies[int(0.95 * (len(latencies) - 1))]:.1f} s, max {latencies[-1]:.1f} s"
-    )
+    print(f"\nfinal system: {_cost_and_latency(_read_jsonl([args.pipeline]))}")
+
+
+def _speech_metrics(rows: list[tuple]) -> dict[str, tuple[int, int]]:
+    """Counts (k, n) per metric for rows of (case, language, tier, label set, name differs)."""
+    wrong = [r for r in rows if r[3] & SPEECH_CLINICAL_ERRORS]
+    misspelt = [r for r in rows if "drug_misspelled" in r[3] and r not in wrong]
+    clean = [r for r in rows if r not in wrong and r not in misspelt]
+    return {
+        "notes with a clinical error": (len(wrong), len(rows)),
+        "errors marked ready": (sum(r[2] == "ready" for r in wrong), len(wrong)),
+        "notes with only a misspelt drug": (len(misspelt), len(rows)),
+        "clean notes flagged": (sum(r[2] != "ready" for r in clean), len(clean)),
+        "blocked": (sum(r[2] == "blocked" for r in rows), len(rows)),
+        "resident name differs from the dictated name": (sum(r[4] for r in rows), len(rows)),
+    }
+
+
+def score_speech(args: argparse.Namespace) -> None:
+    """End-to-end metrics for a pipeline run, against labels of what was actually said."""
+    cases = {case.id: case for case in load_cases(args.cases)}
+    labels = {
+        (a["case"], a["language"]): a["errors"] for a in yaml.safe_load(args.labels.read_text())
+    }
+    records = _read_jsonl([args.pipeline])
+    rows = []
+    for r in records:
+        errors = labels[r["case_id"], r["language"]]
+        resident = next(f for f in cases[r["case_id"]].facts if isinstance(f, ResidentRef))
+        rows.append(
+            (
+                r["case_id"],
+                r["language"],
+                r["tier"],
+                {error["type"] for error in errors},
+                resident.name not in r["output"],
+            )
+        )
+    _print_by_language(rows, _speech_metrics)
+    causes = Counter(error["cause"] for errors in labels.values() for error in errors)
+    print(f"\nerrors by cause: {dict(causes)}")
+    print(_cost_and_latency(records))
+
+
+def score_asr(args: argparse.Namespace) -> None:
+    """Word error rate per transcript file, and per voice when voices are given."""
+    from carelingo.asr import word_error_rate
+
+    def wer(records: list[dict]) -> float:
+        return word_error_rate(
+            [r["reference"] for r in records], [r["hypothesis"] for r in records]
+        )
+
+    voices = {r["id"]: r for r in _read_jsonl(args.voices or [])}
+    for path in args.runs:
+        records = _read_jsonl([path])
+        expected = sum(r["detected_language"] == r["expected_language"] for r in records)
+        compute = sum(r["latency_s"] for r in records)
+        print(
+            f"{path.name}: n={len(records)} WER {wer(records):.1%} | language detected "
+            f"{expected}/{len(records)} | "
+            f"real-time factor {compute / sum(r['audio_s'] for r in records):.2f}"
+        )
+        by_voice = defaultdict(list)
+        for r in records:
+            if r["id"] in voices:
+                voice = voices[r["id"]]
+                by_voice[voice["voice"], voice["accent"]].append(r)
+        for (voice, accent), subset in sorted(by_voice.items()):
+            print(f"  {voice} ({accent}): n={len(subset)} WER {wer(subset):.1%}")
+
+
+def demo(args: argparse.Namespace) -> None:
+    """Replay recorded notes offline, or run one new dictation live."""
+    if args.text:
+        config = PipelineConfig(
+            draft=ModelChoice(MistralClient(reasoning_effort="low"), "mistral-large-4"),
+            extractor=ModelChoice(MistralClient(), "ministral-14b-2512"),
+        )
+        print(
+            render(live_view(process(args.text, args.language, config), args.text, args.language))
+        )
+        return
+    cases = {case.id: case for case in load_cases(args.cases)}
+    chosen = [s for s in SCENARIOS if args.scenario in (None, s.name)]
+    print("\n\n".join(render(replay(s, args.results, cases[s.case])) for s in chosen))
 
 
 def run_asr(args: argparse.Namespace) -> None:
@@ -600,8 +690,8 @@ def simulate_routing(args: argparse.Namespace) -> None:
         key = (v["generator"], v["case_id"], v["language"])
         case = cases[v["case_id"]]
         discrepancies = verify(
-            _FACTS.validate_python(v["source_facts"]),
-            _FACTS.validate_python(v["output_facts"]),
+            FACT_LIST.validate_python(v["source_facts"]),
+            FACT_LIST.validate_python(v["output_facts"]),
             case.sources[v["language"]],
             v["language"],
             v["output"],
@@ -738,6 +828,23 @@ def main() -> None:
     final.add_argument("--narrative", type=Path, nargs="+", help="narrative records, final system")
     final.add_argument("--reference-narrative", type=Path, nargs="+", help="same, reference")
     final.set_defaults(handler=report)
+
+    speech = commands.add_parser("score-speech", help="end-to-end metrics against labels")
+    speech.add_argument("--pipeline", type=Path, required=True)
+    speech.add_argument("--labels", type=Path, required=True)
+    speech.set_defaults(handler=score_speech)
+
+    wer = commands.add_parser("score-asr", help="word error rate of recorded transcripts")
+    wer.add_argument("runs", type=Path, nargs="+")
+    wer.add_argument("--voices", type=Path, nargs="+", help="voice records from synthesize")
+    wer.set_defaults(handler=score_asr)
+
+    tour = commands.add_parser("demo", help="replay recorded notes, or run one dictation live")
+    tour.add_argument("scenario", nargs="?", choices=[s.name for s in SCENARIOS])
+    tour.add_argument("--results", type=Path, default=DEFAULT_RESULTS_DIR)
+    tour.add_argument("--text", help="a new dictation to run live (needs MISTRAL_API_KEY)")
+    tour.add_argument("--language", choices=["en", "pl"], default="en")
+    tour.set_defaults(handler=demo)
 
     asr = commands.add_parser("asr", help="transcribe audio and report word error rate")
     asr.add_argument("--manifest", type=Path, required=True, help="TSV: id, file, reference")

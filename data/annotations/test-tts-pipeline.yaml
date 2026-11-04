@@ -1,5 +1,5 @@
 # Manual error labels for the final system's drafts made from speech-recognition
-# transcripts of synthetic speech (runs/test/pipeline-tts-extract-large.jsonl; Piper
+# transcripts of synthetic speech (results/pipeline-tts-extract-large.jsonl; Piper
 # voices, Whisper large-v3-turbo, language pinned; extractor mistral-large-4 because
 # ministral-14b was unavailable). Labelled against what was dictated, not what was heard.
 # Single annotator, not a clinician. c013-c018 were labelled after seeing the verifier's
@@ -11,7 +11,7 @@
 #   room_changed     room number changed or missing (clinical)
 # cause: asr when the transcript already carried the error, draft otherwise.
 # Resident-name misspellings are counted automatically, not labelled here.
-# The typed-text control run (runs/test/pipeline-typed-extract-large.jsonl) was read
+# The typed-text control run (results/pipeline-typed-extract-large.jsonl) was read
 # the same way and all 48 notes were clean.
 - {case: c013, language: en, errors: [{type: drug_changed, cause: asr}]}
 - {case: c013, language: pl, errors: [{type: drug_misspelled, cause: asr}, {type: language_leak, cause: asr}]}

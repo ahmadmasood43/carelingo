@@ -52,3 +52,10 @@ def test_polish_checklist_reports_status_change_in_polish():
 def test_inverse_terms_render_with_their_meaning():
     line = render_fact(Finding(concept="fieberfrei", polarity=Polarity.PRESENT), "en")
     assert line == "Fever: no"
+
+
+def test_checklist_keeps_the_case_of_german_terms_and_abbreviations():
+    unknown = render_fact(Finding(concept="Dekubitusrisiko"), "pl")
+    assert unknown.startswith("„Dekubitusrisiko“")
+    action = render_fact(CareMeasure(action="Hausarzt informieren", status="done"), "en")
+    assert action == "Inform the GP: done"

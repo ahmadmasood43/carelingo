@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from carelingo.facts import (
+    FACT_LIST,
     CareMeasure,
     Fact,
     Finding,
@@ -516,6 +517,20 @@ def verify(
 
 
 UNVERIFIABLE = Discrepancy("changed", "critical", "extraction", "note could not be checked")
+
+
+def reverify(record: dict, dictation: str) -> list[Discrepancy]:
+    """Discrepancies of a recorded verification, recomputed from its extracted facts."""
+    discrepancies = verify(
+        FACT_LIST.validate_python(record["source_facts"]),
+        FACT_LIST.validate_python(record["output_facts"]),
+        dictation,
+        record["language"],
+        record["output"],
+    )
+    if record.get("extraction_failed"):
+        discrepancies.insert(0, UNVERIFIABLE)
+    return discrepancies
 
 
 def needs_review(discrepancies: list[Discrepancy]) -> bool:

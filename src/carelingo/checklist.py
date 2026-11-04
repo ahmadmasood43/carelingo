@@ -195,6 +195,11 @@ def _term(german: str | None, category: str, language: str) -> str:
     return f"„{german}“ ({_word('german_term', language)})"
 
 
+def _capitalized(text: str) -> str:
+    # str.capitalize() would lowercase the rest, including German nouns and "GP".
+    return text[:1].upper() + text[1:]
+
+
 def _unit(unit: str | None, language: str) -> str:
     if unit is None:
         return ""
@@ -246,7 +251,9 @@ def render_fact(fact: Fact, language: str) -> str:
             return f"{fact.drug}{dose}: {', '.join(details)}{_time(fact.context)}"
         case Finding():
             concept, polarity = canonical_finding(fact.concept, fact.polarity)
-            name = _term(concept, "finding", language).capitalize()
+            # Unknown concepts come back folded; show those as they were written.
+            shown = concept if concept in TERMS else fact.concept
+            name = _capitalized(_term(shown, "finding", language))
             line = f"{name}: {_word(polarity, language)}"
             side = _side_and_site(fact.site, fact.laterality, language)
             if side:
@@ -255,14 +262,14 @@ def render_fact(fact: Fact, language: str) -> str:
                 line += f" ({fact.count} {_word('times', language)})"
             return line + _time(fact.context)
         case CareMeasure():
-            action = _term(fact.action, "action", language)
-            return f"{action.capitalize()}: {_word(fact.status, language)}{_time(fact.context)}"
+            action = _capitalized(_term(fact.action, "action", language))
+            return f"{action}: {_word(fact.status, language)}{_time(fact.context)}"
         case Intake():
-            substance = _term(fact.substance, "substance", language).capitalize()
+            substance = _capitalized(_term(fact.substance, "substance", language))
             return f"{substance}: {_number(fact.amount, language)} {_unit(fact.unit, language)}"
         case Score():
             maximum = f"/{_number(fact.maximum, language)}" if fact.maximum else ""
-            label = _term(fact.scale, "scale", language).capitalize()
+            label = _capitalized(_term(fact.scale, "scale", language))
             return f"{label}: {_number(fact.value, language)}{maximum}"
 
 

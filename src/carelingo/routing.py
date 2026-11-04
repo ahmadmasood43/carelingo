@@ -1,7 +1,8 @@
 """What happens to a draft once it has been verified.
 
-Critical discrepancies (a changed value, status, side, drug or resident) had no false
-alarms on clean notes in the error-injection benchmark, so they are trusted to stop a
+Critical discrepancies (a changed value, status, side, drug or resident) are rarely
+false alarms, though not never: on the held-out split they blocked 3 of 48 notes with
+no clinical error, and flagged 2 of 96 injected controls. They are trusted to stop a
 note: it is blocked for human review, or, in the small-model-first variant, drafted
 once more by a strong model first. Major discrepancies and narrative findings are
 noisier; they are shown to the nurse as items to check.
