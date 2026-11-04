@@ -1,7 +1,8 @@
-# Manual error labels for the typed-text control of the speech run
+# Error labels for the typed-text control of the speech run
 # (results/pipeline-typed-extract-large.jsonl: extractor mistral-large-4, as in the
 # speech run). Written from dictation and note, before reading tiers or flags.
-# Single annotator, not a clinician. All 48 notes were clean.
+# Written by one LLM annotator (Claude); not reviewed by a clinician or native speaker.
+# All 48 notes were clean.
 - {case: c013, language: en, errors: []}
 - {case: c013, language: pl, errors: []}
 - {case: c014, language: en, errors: []}

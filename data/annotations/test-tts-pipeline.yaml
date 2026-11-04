@@ -1,8 +1,9 @@
-# Manual error labels for the final system's drafts made from speech-recognition
+# Error labels for the final system's drafts made from speech-recognition
 # transcripts of synthetic speech (results/pipeline-tts-extract-large.jsonl; Piper
 # voices, Whisper large-v3-turbo, language pinned; extractor mistral-large-4 because
 # ministral-14b was unavailable). Labelled against what was dictated, not what was heard.
-# Single annotator, not a clinician. c013-c018 were labelled after seeing the verifier's
+# Written by one LLM annotator (Claude); not reviewed by a clinician or native speaker.
+# c013-c018 were labelled after seeing the verifier's
 # flags; c019 onwards from dictation, transcript and note only.
 # Classes as in e001-dev.yaml plus fact_omitted, and:
 #   drug_changed     a different or unrecognisable drug (clinical)

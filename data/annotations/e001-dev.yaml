@@ -1,5 +1,6 @@
-# Manual error labels for the unchecked single-pass baseline outputs
-# (dev split, runs/baseline-dev-*.jsonl). Single annotator, not a clinician.
+# Error labels for the unchecked single-pass baseline outputs
+# (dev split, results/baseline-dev-*.jsonl).
+# Written by one LLM annotator (Claude); not reviewed by a clinician or native speaker.
 # Notes not listed here were judged free of these errors.
 #
 # Classes:

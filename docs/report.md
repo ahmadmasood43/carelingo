@@ -139,7 +139,7 @@ With the narrative check, invented narratives rise to 48/48 and control false al
 held-out rate shows how much tuning flattered that figure.
 
 Error injection also found a real bug during development: a look-alike drug swap at the same
-dose was hidden by a numeric evidence rule. The hand-labelled set had not revealed it.
+dose was hidden by a numeric evidence rule. The labelled set had not revealed it.
 
 ### 5.4 Cost and latency
 
@@ -232,7 +232,7 @@ In four of the six, the wrong fact is visible on the checklist, so a nurse could
 the other two, the only sign is something missing from the checklist.
 
 Of the 14 flagged error notes, about 9 were flagged for a reason related to the error (a
-manual judgement). The rest were flagged by chance, which should not be counted as protection.
+judgement by the same annotator). The rest were flagged by chance, which should not be counted as protection.
 The verifier catches a recognition error only when the draft model and the extractor happen
 to resolve the garbled text differently. When both make the same guess, the error passes.
 
@@ -352,7 +352,7 @@ uv run carelingo simulate-routing \
 
 Not everything is covered by a command: the PriMock57 medical-word check, the count of flagged
 notes with a related reason, and the checklist visibility of the six unflagged errors were
-manual or ad hoc. `results/README.md` describes each run file, and
+one-off checks. `results/README.md` describes each run file, and
 `scripts/primock_segments.py` rebuilds the PriMock57 utterances.
 
 ## Data and model attributions

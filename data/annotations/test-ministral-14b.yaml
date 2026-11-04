@@ -1,6 +1,7 @@
-# Manual error labels for ministral-14b-2512 single-pass drafts on the held-out test
-# split (runs/baseline-test-ministral-14b-2512.jsonl). Single annotator, not a
-# clinician. Written from dictation and draft only, before any verifier output for
+# Error labels for ministral-14b-2512 single-pass drafts on the held-out test split
+# (the notes in results/narrative-test-14b.jsonl).
+# Written by one LLM annotator (Claude); not reviewed by a clinician or native speaker.
+# Written from dictation and draft only, before any verifier output for
 # these drafts was read. Every note is listed; an empty list means checked and clean.
 # Classes as in e001-dev.yaml, plus fact_omitted (a dictated fact missing from the
 # note). Added "p.o." routes are not counted, consistent with the dev labels.

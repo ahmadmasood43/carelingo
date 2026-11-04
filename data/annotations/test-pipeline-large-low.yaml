@@ -1,6 +1,7 @@
-# Manual error labels for the final system on the held-out test split
-# (runs/pipeline-test-large-low.jsonl: mistral-large-4 at reasoning_effort=low).
-# Single annotator, not a clinician. Written from dictation and German draft only,
+# Error labels for the final system on the held-out test split
+# (results/narrative-test-pipeline.jsonl: mistral-large-4 at reasoning_effort=low).
+# Written by one LLM annotator (Claude); not reviewed by a clinician or native speaker.
+# Written from dictation and German draft only,
 # before any tier, discrepancy or narrative output was read. Classes as in
 # e001-dev.yaml. Every note is listed, so an empty error list means checked and clean.
 # No note was judged to contain a clinically meaningful error.
