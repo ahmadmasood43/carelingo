@@ -1,0 +1,56 @@
+# Manual error labels for the final system on the held-out test split
+# (runs/pipeline-test-large-low.jsonl: mistral-large-4 at reasoning_effort=low).
+# Single annotator, not a clinician. Written from dictation and German draft only,
+# before any tier, discrepancy or narrative output was read. Classes as in
+# e001-dev.yaml. Every note is listed, so an empty error list means checked and clean.
+# No note was judged to contain a clinically meaningful error.
+# Borderline, judged equivalent: c017 pl "zgodziła się tylko na umycie twarzy"
+# (agreed only to face washing) rendered as "nur Gesichtswäsche durchgeführt".
+- {model: pipeline:mistral-large-4@low, case: c013, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c013, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c014, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c014, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c015, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c015, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c016, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c016, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c017, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c017, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c018, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c018, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c019, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c019, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c020, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c020, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c021, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c021, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c022, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c022, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c023, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c023, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c024, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c024, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c025, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c025, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c026, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c026, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c027, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c027, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c028, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c028, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c029, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c029, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c030, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c030, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c031, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c031, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c032, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c032, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c033, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c033, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c034, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c034, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c035, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c035, language: pl, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c036, language: en, errors: []}
+- {model: pipeline:mistral-large-4@low, case: c036, language: pl, errors: []}

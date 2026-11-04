@@ -1,0 +1,58 @@
+# Manual error labels for ministral-14b-2512 single-pass drafts on the held-out test
+# split (runs/baseline-test-ministral-14b-2512.jsonl). Single annotator, not a
+# clinician. Written from dictation and draft only, before any verifier output for
+# these drafts was read. Every note is listed; an empty list means checked and clean.
+# Classes as in e001-dev.yaml, plus fact_omitted (a dictated fact missing from the
+# note). Added "p.o." routes are not counted, consistent with the dev labels.
+# Notable: c033 pl calls Braden 12 "keine Risikogefährdung" (it indicates high risk);
+# c020 pl turns left-arm weakness into hemiparesis; c025 pl calls a skin tear
+# "Dekubitusgrad I"; c017 pl renders refused body care as refused toilet visit;
+# c018 en renders "no fever" as "no temperature measured".
+- {model: ministral-14b-2512, case: c013, language: en, errors: []}
+- {model: ministral-14b-2512, case: c013, language: pl, errors: [invented_metadata]}
+- {model: ministral-14b-2512, case: c014, language: en, errors: [invented_metadata, unsupported_claim]}
+- {model: ministral-14b-2512, case: c014, language: pl, errors: [invented_metadata, unsupported_claim, fact_omitted]}
+- {model: ministral-14b-2512, case: c015, language: en, errors: []}
+- {model: ministral-14b-2512, case: c015, language: pl, errors: [invented_metadata, unsupported_claim]}
+- {model: ministral-14b-2512, case: c016, language: en, errors: []}
+- {model: ministral-14b-2512, case: c016, language: pl, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c017, language: en, errors: []}
+- {model: ministral-14b-2512, case: c017, language: pl, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c018, language: en, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c018, language: pl, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c019, language: en, errors: [invented_metadata]}
+- {model: ministral-14b-2512, case: c019, language: pl, errors: [invented_metadata]}
+- {model: ministral-14b-2512, case: c020, language: en, errors: []}
+- {model: ministral-14b-2512, case: c020, language: pl, errors: [unsupported_claim, site_changed]}
+- {model: ministral-14b-2512, case: c021, language: en, errors: []}
+- {model: ministral-14b-2512, case: c021, language: pl, errors: [invented_metadata]}
+- {model: ministral-14b-2512, case: c022, language: en, errors: []}
+- {model: ministral-14b-2512, case: c022, language: pl, errors: []}
+- {model: ministral-14b-2512, case: c023, language: en, errors: []}
+- {model: ministral-14b-2512, case: c023, language: pl, errors: []}
+- {model: ministral-14b-2512, case: c024, language: en, errors: []}
+- {model: ministral-14b-2512, case: c024, language: pl, errors: []}
+- {model: ministral-14b-2512, case: c025, language: en, errors: []}
+- {model: ministral-14b-2512, case: c025, language: pl, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c026, language: en, errors: [invented_metadata, prn_lost]}
+- {model: ministral-14b-2512, case: c026, language: pl, errors: [invented_metadata, unsupported_claim]}
+- {model: ministral-14b-2512, case: c027, language: en, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c027, language: pl, errors: [invented_metadata, unsupported_claim]}
+- {model: ministral-14b-2512, case: c028, language: en, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c028, language: pl, errors: [language_leak, unsupported_claim]}
+- {model: ministral-14b-2512, case: c029, language: en, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c029, language: pl, errors: [language_leak]}
+- {model: ministral-14b-2512, case: c030, language: en, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c030, language: pl, errors: [invented_metadata, unsupported_claim]}
+- {model: ministral-14b-2512, case: c031, language: en, errors: []}
+- {model: ministral-14b-2512, case: c031, language: pl, errors: [language_leak, invented_metadata]}
+- {model: ministral-14b-2512, case: c032, language: en, errors: []}
+- {model: ministral-14b-2512, case: c032, language: pl, errors: []}
+- {model: ministral-14b-2512, case: c033, language: en, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c033, language: pl, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c034, language: en, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c034, language: pl, errors: [unsupported_claim]}
+- {model: ministral-14b-2512, case: c035, language: en, errors: []}
+- {model: ministral-14b-2512, case: c035, language: pl, errors: [invented_metadata, unsupported_claim]}
+- {model: ministral-14b-2512, case: c036, language: en, errors: []}
+- {model: ministral-14b-2512, case: c036, language: pl, errors: []}

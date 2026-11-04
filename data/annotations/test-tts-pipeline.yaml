@@ -1,0 +1,63 @@
+# Manual error labels for the final system's drafts made from speech-recognition
+# transcripts of synthetic speech (runs/test/pipeline-tts-extract-large.jsonl; Piper
+# voices, Whisper large-v3-turbo, language pinned; extractor mistral-large-4 because
+# ministral-14b was unavailable). Labelled against what was dictated, not what was heard.
+# Single annotator, not a clinician. c013-c018 were labelled after seeing the verifier's
+# flags; c019 onwards from dictation, transcript and note only.
+# Classes as in e001-dev.yaml plus fact_omitted, and:
+#   drug_changed     a different or unrecognisable drug (clinical)
+#   drug_misspelled  the right drug, misspelt (counted separately)
+#   value_changed    a number, unit or measured quantity changed (clinical)
+#   room_changed     room number changed or missing (clinical)
+# cause: asr when the transcript already carried the error, draft otherwise.
+# Resident-name misspellings are counted automatically, not labelled here.
+# The typed-text control run (runs/test/pipeline-typed-extract-large.jsonl) was read
+# the same way and all 48 notes were clean.
+- {case: c013, language: en, errors: [{type: drug_changed, cause: asr}]}
+- {case: c013, language: pl, errors: [{type: drug_misspelled, cause: asr}, {type: language_leak, cause: asr}]}
+- {case: c014, language: en, errors: [{type: value_changed, cause: asr}]}
+- {case: c014, language: pl, errors: []}
+- {case: c015, language: en, errors: [{type: fact_omitted, cause: asr}]}
+- {case: c015, language: pl, errors: []}
+- {case: c016, language: en, errors: [{type: room_changed, cause: asr}, {type: value_changed, cause: asr}]}
+- {case: c016, language: pl, errors: []}
+- {case: c017, language: en, errors: [{type: room_changed, cause: asr}]}
+- {case: c017, language: pl, errors: []}
+- {case: c018, language: en, errors: []}
+- {case: c018, language: pl, errors: []}
+- {case: c019, language: en, errors: [{type: drug_changed, cause: asr}, {type: fact_omitted, cause: asr}, {type: unsupported_claim, cause: asr}]}
+- {case: c019, language: pl, errors: []}
+- {case: c020, language: en, errors: [{type: room_changed, cause: asr}, {type: unsupported_claim, cause: asr}, {type: value_changed, cause: asr}, {type: invented_metadata, cause: draft}]}
+- {case: c020, language: pl, errors: [{type: value_changed, cause: asr}]}
+- {case: c021, language: en, errors: [{type: room_changed, cause: asr}, {type: fact_omitted, cause: asr}]}
+- {case: c021, language: pl, errors: []}
+- {case: c022, language: en, errors: [{type: drug_changed, cause: asr}, {type: room_changed, cause: asr}]}
+- {case: c022, language: pl, errors: []}
+- {case: c023, language: en, errors: []}
+- {case: c023, language: pl, errors: []}
+- {case: c024, language: en, errors: [{type: value_changed, cause: asr}, {type: unsupported_claim, cause: asr}, {type: fact_omitted, cause: asr}]}
+- {case: c024, language: pl, errors: []}
+- {case: c025, language: en, errors: [{type: value_changed, cause: asr}]}
+- {case: c025, language: pl, errors: []}
+- {case: c026, language: en, errors: [{type: fact_omitted, cause: asr}, {type: unsupported_claim, cause: asr}, {type: site_changed, cause: asr}]}
+- {case: c026, language: pl, errors: []}
+- {case: c027, language: en, errors: [{type: drug_changed, cause: asr}]}
+- {case: c027, language: pl, errors: []}
+- {case: c028, language: en, errors: []}
+- {case: c028, language: pl, errors: [{type: language_leak, cause: asr}]}
+- {case: c029, language: en, errors: [{type: fact_omitted, cause: asr}]}
+- {case: c029, language: pl, errors: [{type: drug_changed, cause: asr}]}
+- {case: c030, language: en, errors: [{type: site_changed, cause: asr}]}
+- {case: c030, language: pl, errors: []}
+- {case: c031, language: en, errors: [{type: prn_lost, cause: asr}]}
+- {case: c031, language: pl, errors: [{type: language_leak, cause: asr}]}
+- {case: c032, language: en, errors: []}
+- {case: c032, language: pl, errors: [{type: drug_misspelled, cause: asr}]}
+- {case: c033, language: en, errors: []}
+- {case: c033, language: pl, errors: []}
+- {case: c034, language: en, errors: [{type: fact_omitted, cause: asr}]}
+- {case: c034, language: pl, errors: [{type: drug_misspelled, cause: asr}]}
+- {case: c035, language: en, errors: [{type: value_changed, cause: asr}]}
+- {case: c035, language: pl, errors: []}
+- {case: c036, language: en, errors: []}
+- {case: c036, language: pl, errors: []}
